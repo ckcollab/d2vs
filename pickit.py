@@ -5,7 +5,9 @@ from collections import defaultdict
 from datetime import datetime
 from time import sleep
 
-from constants import ITEM_TYPES
+from d2vs.alert_helpers import send_mail
+from d2vs.constants import ITEM_TYPES
+from d2vs.ocr import OCR
 
 
 # On load one time we read pickit from ./pickit.txt
@@ -16,8 +18,6 @@ from constants import ITEM_TYPES
 # i.e. (ALL LOWER!)
 #   "monarch": ["unique"],
 #   "amulet": ["rare", "set", "unique"],
-from d2vs.ocr import OCR
-
 PICKIT_CONFIG = defaultdict(set)
 
 try:
@@ -61,8 +61,12 @@ def pick_area(base_x=500, base_y=300, end_x=1900, end_y=1000, max_loops=8):
                     # Ignore super common things from logging
                     if 'potion' in text.lower() or 'arrows' == text.lower() or 'bolts' == text.lower() or ' Gold' in text or 'scroll of' in text.lower():
                         continue
-                    pickable_suffix = '***' if is_pickable(text, item_type) else ''
+                    pickable = is_pickable(text, item_type)
+                    pickable_suffix = '***' if pickable else ''
                     f.write(f"{datetime.now():%m/%d/%Y %I:%M%p} {text}, {item_type}{pickable_suffix}\n")
+
+                    if pickable:
+                        send_mail(f"[D2VS] Found {item_type} {text}", "Nothing much else to say chief!")
 
         any_pickable = False
 

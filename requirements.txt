@@ -3,3 +3,4 @@ pyautogui
 # try this out?
 #mouse
 
+python-dotenv==0.19.1

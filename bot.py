@@ -142,14 +142,16 @@ class Bot:
 
         # Back at char selection? OR maybe we're in game?
         if not is_in_game():
-            char_screen_retries = 0
-            while not is_at_character_select_screen() and char_screen_retries < 2:
-                print("wtf is char screen? waiting...")
-                sleep(2)
+            char_screen_retries = 1
+            while not is_at_character_select_screen() and char_screen_retries < 3:
+                sleep(2 * char_screen_retries)
                 char_screen_retries += 1
 
-            if char_screen_retries >= 2:
+            if char_screen_retries >= 3:
                 # TODO: Restart game here???
+                # Clicking "Online" to see if we can get online yet...
+                click(2185, 71, delay=1)
+                print("We're not at online char select screen yet..")
                 return
 
             # Start game...
