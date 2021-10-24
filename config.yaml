@@ -1,0 +1,8 @@
+skills:
+#  blizzard: f2
+
+  # maybe 'main_damage' instead of 'blizzard' to handle meteor better??
+  main_damage: f2
+  teleport: f5
+  telekenesis: f7
+

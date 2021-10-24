@@ -1,0 +1,25 @@
+ITEM_TYPES = {
+    "Normal": [
+        [0xF0, 0xF0, 0xF0],
+        [0xF1, 0xF1, 0xF1],
+    ],
+    "Magic": [
+        [0x75, 0x75, 0xFF]
+    ],
+    "Rare": [
+        [0xFF, 0xFF, 0x6B]
+    ],
+    "Set": [
+        [0x50, 0xFC, 0x00]
+    ],
+    "Unique": [
+        [0xC7, 0xB3, 0x77]
+    ],
+    "Rune": [
+        [0xFF, 0xAD, 0x00]
+    ],
+    # Too many false positives with this for now?! :(0x6363
+    "Socketed/Ethereal": [
+        [0x63, 0x63, 0x63]
+    ],
+}

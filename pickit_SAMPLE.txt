@@ -1,0 +1,189 @@
+#
+#
+# gotchyas:
+#   - nothing is identified yet.
+#   - ethereal/socketed doesn't work, can't discern from background properly -- MAY be working now Oct 20, 2021
+#   - everything case-insensitive
+#
+# d2vs pickit syntax:
+#   #'s at the beginning of a line make the whole line a comment
+#   <Item text as seen on d2>, <Item class: Normal, Magic, Rare, Set, Unique, Socketed/Ethereal>
+#
+# example:
+#   # Shako
+#   Shako, Unique
+#
+#   # Stormshield
+#   Monarch, Unique
+#
+#   # Tal's Armor
+#   Lacquered Plate, Set
+#
+
+# Shako
+Shako, Unique
+
+# Stormshield
+Monarch, Unique
+
+# Manalds probably, hopefully soj!
+Ring, Unique
+
+# Crap, but maybe maras!?
+Amulet, Unique
+
+# Jewelz
+Jewel, Rare
+Jewel, Magic
+Jewel, Unique
+
+# Anni
+Small Charm, Unique
+
+# Torch
+Large Charm, Unique
+
+# Gheed's .. disable when you find it later!
+Grand Charm, Unique
+
+# ???
+Dusk Shroud, Unique
+
+# Magi
+Serpentskin Armor, Unique
+
+# Misc armor
+Mesh Armor, Unique
+Russet Armor, Unique
+Templar Coat, Unique
+Balrog Skin, Unique
+Sacred Armor, Unique
+
+# Misc helms
+Grand Crown, Unique
+Grim Helm, Unique
+Spired Helm, Unique
+Demonhead, Unique
+Corona, Unique
+Tiara, Unique
+Diadem, Unique
+
+# Misc gloves
+Vampirebone Gloves, Unique
+Battle Gauntlets, Unique
+Ogre Gauntlets, Unique
+
+# Boots
+Sharkskin Boots, Unique
+Battle Boots, Unique
+War Boots, Unique
+
+# Belts
+Spiderweb Sash, Unique
+Mithril Coil, Unique
+Demonhide Sash, Unique
+War Belt, Unique
+
+# Bows
+Hydra Bow, Unique
+Ward Bow, Unique
+
+# Daggers
+Dagger, Unique
+Bone Knife, Unique
+Fanged Knife, Unique
+
+# Javs
+Ghost Glaive, Unique
+
+# Polearms
+Thresher, Unique
+
+# Class items
+Ceremonial Javelin, Unique
+Matriarchal Javelin, Unique
+
+Greater Talons, Unique
+Wrist Sword, Unique
+
+Hierophant Trophy, Unique
+Bloodlord Skull, Unique
+
+Slayer Guard, Unique
+Fury Visor, Unique
+
+
+Eldritch Orb, Unique
+Dimensional Shard, Unique
+
+Totemic Mask, Unique
+Blood Spirit, Unique
+
+Sacred Rondache, Unique
+Gilded Shield, Unique
+
+# Runes .. I know it's redundant for now!
+Hel Rune, Rune
+Lum Rune, Rune
+Ko Rune, Rune
+Fal Rune, Rune
+Lem Rune, Rune
+Pul Rune, Rune
+Um Rune, Rune
+Mal Rune, Rune
+Ist Rune, Rune
+Gul Rune, Rune
+Vex Rune, Rune
+Ohm Rune, Rune
+Lo Rune, Rune
+Sur Rune, Rune
+Ber Rune, Rune
+Jah Rune, Rune
+Cham Rune, Rune
+Zod Rune, Rune
+
+# Sets
+Amulet, Set
+Battle Boots, Set
+#Troll Belt, Set
+Bone Visage, Set
+Caduceus, Set
+Corona, Set
+Vortex Shield, Set
+
+# Tal Rasha
+Lacquered Plate, Set
+Swirling Crystal, Set
+#Death Mask, Set
+
+# Immortal King
+Avenger Guard, Set
+War Boots, Set
+War Belt, Set
+War Gauntlets, Set
+Sacred Armor, Set
+#Ogre Maul, Set
+
+
+
+
+
+# if you're watching closely..
+Amulet, Rare
+Ring, Rare
+#Rejuvenation Potion, Normal
+#Full Rejuvenation Potion, Normal
+Grand Charm, Magic
+Large Charm, Magic
+Small Charm, Magic
+Thresher, Socketed/Ethereal
+Giant Thresher, Socketed/Ethereal
+Circlet, Rare
+Diadem, Rare
+Tiara, Rare
+
+# Spirit runes .. roll a perfect lol
+Tal Rune, Rune
+Thul Rune, Rune
+#Ort Rune, Rune
+#Amn Rune, Rune

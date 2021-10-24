@@ -1,0 +1,5 @@
+v0.0.1:
+	- OCRing items
+	- Saving OCR'd items for re-labeling
+	- Goes to Pindle, kills 'em, scans, picks things up
+	- Shitty pickit + config
