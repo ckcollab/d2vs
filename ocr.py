@@ -63,22 +63,22 @@ class OCR(metaclass=SingletonOptmizedOptmized):
 
         assert coords_have_been_translated != "Unset", "You must set coords_have_been_translated to True or False!"
 
-        print("old:", x1, y1, x2, y2)
+        # print("old:", x1, y1, x2, y2)
 
         if not coords_have_been_translated:
             x1, y1 = coord_translation(x1, y1)
             x2, y2 = coord_translation(x2, y2)
 
-        print("new:", x1, y1, x2, y2)
+        # print("new:", x1, y1, x2, y2)
 
-        if x1 <= 0:
-            x1 = 1
-        if y1 <= 0:
-            y1 = 1
-        if x2 <= 0:
-            x2 = 1
-        if y2 <= 0:
-            y2 = 1
+        # if x1 <= 0:
+        #     x1 = 1
+        # if y1 <= 0:
+        #     y1 = 1
+        # if x2 <= 0:
+        #     x2 = 1
+        # if y2 <= 0:
+        #     y2 = 1
 
         assert self.screen_data is not None, "You must call OCR.set_screen_data before calling OCR.read"
 

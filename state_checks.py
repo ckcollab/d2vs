@@ -31,19 +31,9 @@ def is_at_character_select_screen():
 
     :return: True if we can see the text "Play" in the right spot
     """
-
-    # import time
-    # time.sleep(1)
-    # mouse_move(990, 1265)
-    # time.sleep(3)
-    # mouse_move(1145, 1320)
-    # time.sleep(3)
-
-
-
     readings = OCR().read(980, 1245, 1155, 1335, coords_have_been_translated=False)
-    print("is_at_character_select_screen results:")
-    print(readings)
+    # print("is_at_character_select_screen results:")
+    # print(readings)
     return readings and readings[0][1] == "Play"
 
 

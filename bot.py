@@ -1,10 +1,8 @@
 import os
-from datetime import datetime
-
-import keyboard
 import numpy as np
 import pyautogui
 
+from datetime import datetime
 from time import sleep, time
 from threading import Thread
 
@@ -12,53 +10,11 @@ from d2vs.exceptions import ChickenException, CanNoLongerBotException
 from d2vs.helpers import click, shift_attack, coord_translation
 from d2vs.modules import Town, Chicken, PickIt
 from d2vs.ocr import OCR
-from d2vs.pickit import is_pickable, pick_area
+from d2vs.pickit import pick_area
 from d2vs.thread_hacks import ctype_async_raise
 from d2vs.window import Window
 
-# DO_MONSTER_SCAN = False
-# DO_ITEM_SCAN = False
 from state_checks import is_corpse_on_ground, is_at_character_select_screen, is_in_queue, is_mercenary_alive, is_in_game
-
-
-#
-#
-# def ocr_loop():
-#     # ocr = OCR()
-#
-#     potential_immunities = ["poison", "lightning", "cold", "fire"]
-#
-#     while True:
-#         if DO_MONSTER_SCAN:
-#             pindle_immunities = []
-#             bounds = ocr.read(773, 5, 1772, 200)
-#
-#             # is this a pindle mouse over?
-#             all_text = " ".join([text.lower() for (_, text, _) in bounds])
-#
-#             if "pindle" in all_text:
-#                 for immunity in potential_immunities:
-#                     if f"immune to {immunity}" in all_text:
-#                         pindle_immunities.append(immunity)
-#
-#                 print(f"Pindle immunities seen: {pindle_immunities}")
-#
-#         if DO_ITEM_SCAN:
-#             scan_area(ocr)
-#
-#         sleep(.01)  # don't use 100% cpu
-#
-# Thread(target=ocr_loop).start()
-
-
-
-# sleep(2)
-# pick_area(ocr, 1150, 150, 2300, 750)
-#
-#
-#
-# sleep(500)
-
 
 
 class Bot:
@@ -174,8 +130,6 @@ class Bot:
             print("we timed out ???")
             return
 
-        # print("We're in game.")
-
         # TODO: Confirm we eventually see loading ...
 
         # Game started ...
@@ -238,9 +192,9 @@ class Bot:
 
         click(641, 883, delay=1.3)
         pyautogui.press('f7')  # telekenisis
-        click(350, 475, delay=1.4, button="right")
-        click(350, 400, delay=.5, button="right")  # sometimes first one doesnt work ... click a little up
-        click(435, 325, delay=.5, button="right")  # sometimes first one doesnt work ... click a lot up and to the right
+        click(350, 475, delay=1.5, button="right")
+        click(350, 400, delay=.8, button="right")  # sometimes first one doesnt work ... click a little up
+        click(435, 325, delay=.8, button="right")  # sometimes first one doesnt work ... click a lot up and to the right
 
         # TP to pindle
         sleep(1)
@@ -265,31 +219,11 @@ class Bot:
         # wait for merc to maybe kill cold immune guy?
         sleep(1.5)
 
-        # click(1815, 315, delay=1.25, button="right")
-        # click(1815, 315, delay=.45, button="right")
-        # click(1815, 315, delay=.45, button="right")
-        # click(1815, 315, delay=.45, button="right")
-        #
-        # # Attack sequence ----------------------------------------------------
-        # # Glacier opener
-        # shift_attack(1700, 500)
-        #
-        # # Blizz then move forward
-        # pyautogui.press('f2')  # blizzard
-        # click(1925, 355, delay=.5, button="right")
-        # click(1425, 650, delay=1.15)
-        # sleep(.5)
-        #
-        # # Final attack combo
-        # for _ in range(1):
-        #     shift_attack(1700, 450, duration=1.5)  # glaciers
-        #     click(1775, 400, delay=.375, button="right")  # blizz
-
         # Read under cursor, cold immune?
         # todo..
 
         # Check items?
-        # pyautogui.press('f5')  # teleport
+        # pyautogui.press('f5')  # teleport closer..
         # click(1775, 400, delay=.5, button="right")
         pick_area(700, 1, 2599, 750)
 
@@ -298,15 +232,7 @@ class Bot:
         click(1275, 633, delay=.5)
 
         # wait for next!
-        sleep(25)
-
-        # loop:
-        #   - start game if not running, click to char screen
-        #   - start hell game
-        #   - do town management
-        #   - do pindle, would be nice to know if he's cold immune
-        #   - scan for items
-        #   - leave
+        sleep(20)
 
     def run(self):
         # daemon=True here so when we close the app this thread closes cleanly, doesn't seem to otherwise..
@@ -322,153 +248,5 @@ class Bot:
             sleep(1)
 
 
-
 bot = Bot()
 bot.run()
-
-
-
-
-
-
-
-
-
-
-
-
-exit()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# print(is_corpse_on_ground())
-#
-#
-#
-# sleep(500)
-
-
-
-
-
-
-
-
-
-# Wait for game to maximize...
-sleep(2)
-
-while True:
-    if pyautogui.getActiveWindowTitle() != "Diablo II: Resurrected":
-        print("Diablo 2 not active any more, something bad happened!")
-        break
-
-    # Start hell game..
-    click(1059, 1285)
-    click(1275, 782, delay=.25)
-
-    # Wait for game to load..
-    # TOOD: Actually wait, smartly!
-    sleep(13)
-
-    # TODO: do we need to pickup our body?
-
-
-
-    # TODO: do we need to revive merc? (go to act 4 and do it, then come back)
-
-    # TODO: detect: are we in act 4 or 5?
-
-    # TODO: go to red portal, however we have to get there...
-
-
-    # Go from a5 start to red portal
-    click(765, 1200)
-    click(800, 1145, delay=1.45)
-    click(999, 1286, delay=1.55)
-    click(999, 1286, delay=.05)
-    click(1131, 1269, delay=1.45)
-
-
-
-    click(641, 883, delay=1.3)
-    pyautogui.press('f7')  # telekenisis
-    click(350, 475, delay=1.4, button="right")
-    click(350, 400, delay=.5, button="right")  # sometimes first one doesnt work ... click a little up
-    click(420, 350, delay=.5, button="right")  # sometimes first one doesnt work ... click a lot up and to the right
-
-    # TP to pindle
-    sleep(1)
-    pyautogui.press('f5')  # teleport
-
-    click(1400, 700, delay=1.25)  # take a quick step forward before TPing
-
-    click(2535, 25, delay=.45, button="right")
-    click(2535, 25, delay=.45, button="right")
-
-    pyautogui.press('f2')  # set blizzard up
-    click(1557, 352, delay=.45, button="right")  # blizz
-
-    # Glacier opener
-    shift_attack(1557, 352)
-
-    # Final attack combo
-    for _ in range(2):
-        shift_attack(1557, 352, duration=1.75)  # glaciers
-        click(1557, 352, delay=.5, button="right")  # blizz
-
-    # wait for merc to maybe kill cold immune guy?
-    sleep(1.5)
-
-
-
-    # click(1815, 315, delay=1.25, button="right")
-    # click(1815, 315, delay=.45, button="right")
-    # click(1815, 315, delay=.45, button="right")
-    # click(1815, 315, delay=.45, button="right")
-    #
-    # # Attack sequence ----------------------------------------------------
-    # # Glacier opener
-    # shift_attack(1700, 500)
-    #
-    # # Blizz then move forward
-    # pyautogui.press('f2')  # blizzard
-    # click(1925, 355, delay=.5, button="right")
-    # click(1425, 650, delay=1.15)
-    # sleep(.5)
-    #
-    # # Final attack combo
-    # for _ in range(1):
-    #     shift_attack(1700, 450, duration=1.5)  # glaciers
-    #     click(1775, 400, delay=.375, button="right")  # blizz
-
-
-
-
-    # Read under cursor, cold immune?
-    # todo..
-
-    # Check items?
-    # pyautogui.press('f5')  # teleport
-    # click(1775, 400, delay=.5, button="right")
-    pick_area(ocr, 700, 1, 2599, 750)
-
-    # leave game...
-    pyautogui.press('esc')
-    click(1275, 633, delay=.5)
-
-    # wait for next!
-    sleep(25)
