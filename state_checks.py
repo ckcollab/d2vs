@@ -1,6 +1,6 @@
 import numpy as np
 
-from d2vs.helpers import mouse_move
+from d2vs.helpers import mouse_move, coord_translation
 from d2vs.ocr import OCR
 
 
@@ -16,7 +16,7 @@ def is_corpse_on_ground():
     # Try a couple times..
     for _ in range(2):
         # Scan it
-        results = OCR().read(790, 420, 1760, 520, delay=.5)
+        results = OCR().read(790, 420, 1760, 520, delay=.5, coords_have_been_translated=False)
         # 'corpse' any where in text all lowercased?
         if any('corpse' in text.lower() for _, text, _ in results):
             return True
@@ -31,9 +31,19 @@ def is_at_character_select_screen():
 
     :return: True if we can see the text "Play" in the right spot
     """
-    readings = OCR().read(1000, 1270, 1145, 1320)
-    # print("is_at_character_select_screen results:")
-    # print(readings)
+
+    # import time
+    # time.sleep(1)
+    # mouse_move(990, 1265)
+    # time.sleep(3)
+    # mouse_move(1145, 1320)
+    # time.sleep(3)
+
+
+
+    readings = OCR().read(980, 1245, 1155, 1335, coords_have_been_translated=False)
+    print("is_at_character_select_screen results:")
+    print(readings)
     return readings and readings[0][1] == "Play"
 
 
@@ -44,9 +54,9 @@ def is_in_queue():
     :return: True if we see the text "queue"
     """
     # Get mouse out of the way..
-    mouse_move(1, 1)
+    mouse_move(2, 2)
     # print(f"OCR ID in is_in_queue: {id(OCR())}")
-    readings = OCR().read(775, 420, 1550, 850, delay=.5)
+    readings = OCR().read(775, 420, 1550, 850, delay=.5, coords_have_been_translated=False)
     # print("is_in_queue results:")
     # print(readings)
     return any(['queue' in text.lower() for _, text, _ in readings])
@@ -59,9 +69,9 @@ def is_mercenary_alive():
 
     :return: True if mercenary health bar found
     """
-    left = 40
-    right = 80
-    merc_healthbar_slice = OCR().screen_data[30:31, left:right]
+    x1, y1 = coord_translation(40, 30)
+    x2, y2 = coord_translation(80, 31)
+    merc_healthbar_slice = OCR().screen_data[y1:y2, x1:x2]
     green_pixel_count = np.sum(merc_healthbar_slice == [0x00, 0x84, 0x00])
     is_alive = green_pixel_count > 40
     # print(f"is_mercenary_alive pixel count for 0x008400 ({is_alive}):")
@@ -78,7 +88,7 @@ def is_in_game():
     """
     mouse_move(618, 1329)  # hover over red health orb
     mouse_move(618, 1335)  # sometimes life isn't showing until you move mouse a bit..
-    readings = OCR().read(406, 1116, 826, 1212, delay=.5)
+    readings = OCR().read(406, 1116, 826, 1212, delay=.5, coords_have_been_translated=False)
     # print("is_in_game results:")
     # print(readings)
     return any(['life:' in text.lower() for _, text, _ in readings])

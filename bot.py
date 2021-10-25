@@ -9,7 +9,7 @@ from time import sleep, time
 from threading import Thread
 
 from d2vs.exceptions import ChickenException, CanNoLongerBotException
-from d2vs.helpers import click, shift_attack
+from d2vs.helpers import click, shift_attack, coord_translation
 from d2vs.modules import Town, Chicken, PickIt
 from d2vs.ocr import OCR
 from d2vs.pickit import is_pickable, pick_area
@@ -113,9 +113,11 @@ class Bot:
     def _game_loop(self):
         # make sure game started
         win = pyautogui.getWindowsWithTitle("Diablo II: Resurrected")
-        if win:
-            # Game open, make sure it's maximized
-            # print("Game window found, maximizing..")
+
+        if win and any(w.title == "Diablo II: Resurrected" for w in win):  # make sure it's the exact title and not some youtube video!
+            # Get first window matching exact title..
+            win = [w for w in win if w.title == "Diablo II: Resurrected"]
+
             win[0].activate()
 
             # Let screen scan fill OCR with data before we start
@@ -148,10 +150,9 @@ class Bot:
                 char_screen_retries += 1
 
             if char_screen_retries >= 3:
-                # TODO: Restart game here???
-                # Clicking "Online" to see if we can get online yet...
+                # TODO: Restart game here if we've tried this a few times???
+                print("We're not at online char select screen yet, clicking 'Online' to try and get back..")
                 click(2185, 71, delay=1)
-                print("We're not at online char select screen yet..")
                 return
 
             # Start game...
@@ -211,15 +212,15 @@ class Bot:
             click(315, 10, delay=8.5)    # click Tyrael
 
             # Search for "Resurrect: " text and click the center of it
-            x_offset = 512
-            y_offset = 16
-            resurrect_readings = OCR().read(x_offset, y_offset, 1697, 699, delay=2.5)
+            x1, y1 = coord_translation(512, 16)
+            x2, y2 = coord_translation(1697, 699)
+            resurrect_readings = OCR().read(x1, y1, x2, y2, delay=2.5, coords_have_been_translated=True)
             print("resurrect_readings results:")
             print(resurrect_readings)
             for (top_left, top_right, bottom_right, bottom_left), text, _ in resurrect_readings:
                 if "resurrect" in text.lower():
-                    center_y = int(y_offset + top_left[1] + ((bottom_right[1] - top_left[1]) / 2))
-                    center_x = int(x_offset + top_left[0] + 6)
+                    center_y = int(y1 + top_left[1] + ((bottom_right[1] - top_left[1]) / 2))
+                    center_x = int(x1 + top_left[0] + 6)
 
                     # click resurrect
                     click(center_x, center_y)

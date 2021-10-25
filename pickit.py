@@ -7,6 +7,7 @@ from time import sleep
 
 from d2vs.alert_helpers import send_mail
 from d2vs.constants import ITEM_TYPES
+from d2vs.helpers import coord_translation
 from d2vs.ocr import OCR
 
 
@@ -34,9 +35,24 @@ except FileNotFoundError:
 
 
 def pick_area(base_x=500, base_y=300, end_x=1900, end_y=1000, max_loops=8):
+    """
+    Picks up items from a scan area, does up to max_loops (default 8) pickup attempts
+
+    These coordinates are automatically translated from 1440p to 1080p
+
+    :param base_x:
+    :param base_y:
+    :param end_x:
+    :param end_y:
+    :param max_loops:
+    :return:
+    """
     # Reveal items on ground and wait for it to draw to screen
     keyboard.press('alt')
     sleep(.1)
+
+    base_x, base_y = coord_translation(base_x, base_y)
+    end_x, end_y = coord_translation(end_x, end_y)
 
     current_loop = 0
     while current_loop < max_loops:
@@ -47,6 +63,7 @@ def pick_area(base_x=500, base_y=300, end_x=1900, end_y=1000, max_loops=8):
             end_x,
             end_y,
             save_debug_images=current_loop == 0,  # only save first loop
+            coords_have_been_translated=True,
         )
 
         # TODO: Algorithm to detect mis-picks!

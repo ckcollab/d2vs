@@ -8,6 +8,7 @@ from PIL import Image
 from time import sleep, time
 
 from constants import ITEM_TYPES
+from d2vs.helpers import coord_translation
 from singleton import SingletonOptmizedOptmized
 from window import Window
 
@@ -39,9 +40,45 @@ class OCR(metaclass=SingletonOptmizedOptmized):
 
         # print(f"Set screen data, I am {id(self)}")
 
-    def read(self, x1, y1, x2, y2, save_debug_images=False, delay=.1):
+    def read(self, x1, y1, x2, y2, save_debug_images=False, delay=.1, coords_have_been_translated="Unset"):
+        """
+        Scans an area and returns the bounded text boxes, as well as a guess for the Item Type.
+
+        Must have screen_data set before calling.
+
+        These coordinates are by default NOT translated! These are raw coordinates, translate before calling this
+        function or pass translate_coords=True
+
+        :param x1:
+        :param y1:
+        :param x2:
+        :param y2:
+        :param save_debug_images: If True debug images are saved for machine learning later, to ocr_training/
+        :param delay: how long to wait before scanning the area
+        :param coords_have_been_translated: whether or not to translate coords from 1440p to current resolution, you must specify this!
+        :return:
+        """
         # Small delay so screen data can be written before we read..
         sleep(delay)
+
+        assert coords_have_been_translated != "Unset", "You must set coords_have_been_translated to True or False!"
+
+        print("old:", x1, y1, x2, y2)
+
+        if not coords_have_been_translated:
+            x1, y1 = coord_translation(x1, y1)
+            x2, y2 = coord_translation(x2, y2)
+
+        print("new:", x1, y1, x2, y2)
+
+        if x1 <= 0:
+            x1 = 1
+        if y1 <= 0:
+            y1 = 1
+        if x2 <= 0:
+            x2 = 1
+        if y2 <= 0:
+            y2 = 1
 
         assert self.screen_data is not None, "You must call OCR.set_screen_data before calling OCR.read"
 
@@ -58,18 +95,9 @@ class OCR(metaclass=SingletonOptmizedOptmized):
 
         annotated_bounds = []
         for (top_left, top_right, bottom_right, bottom_left), text, _ in bounds:
-
-
-            # for test purposes, save this...
-
-            # if text.lower() not in ["claws", "clasped orb", "naga"]:
-            #     continue
-
-            # with open(os.path.join('ocr_training', )) as f
             if save_debug_images:
                 try:
                     item_cutout = self.screen_data[y1 + top_left[1] : y1 + bottom_right[1], x1 + top_left[0] : x1 + bottom_right[0]]
-                    # item_random_image_name = f"{uuid4()}.png"
                     item_random_image_name = f"{self.debug_image_counter:04}-{time()}.png"
                     Image.fromarray(item_cutout).save(os.path.join('ocr_training', item_random_image_name))
                     with open(os.path.join('ocr_training', 'labels.csv'), 'a+') as f:
@@ -79,15 +107,10 @@ class OCR(metaclass=SingletonOptmizedOptmized):
                     print(f"Weird failure? text = {text}, top_left = {top_left}, top_right = {top_right}, bottom_right = {bottom_right}, bottom_left = {bottom_left}")
                     print(traceback.format_exc())
 
-            # from the left to the right, right down the center, only 1 row of pixels (through the center)
+            # from the left to the right, right down the center, only a couple rows of pixels (through the center)
             center_y = int(y1 + top_left[1] + ((bottom_right[1] - top_left[1]) / 2))
-            # print(center_y, x1 + top_left[0], x1 + bottom_right[0])
-            # for pixel in screen_data[center_y:center_y + 1, int(x1 + top_left[0]):int(x1 + bottom_right[0])]
             row_data = self.screen_data[center_y - 1:center_y + 1, int(x1 + top_left[0]):int(x1 + bottom_right[0])]
-            # print("topleft:", top_left)
-            # print("start:", x1 + top_left[0], center_y)
-            # print(row_data)
-            # print(text, ":::")
+
             color_counts = {}
             for item_type, colors in ITEM_TYPES.items():
                 if len(colors) == 1:
@@ -100,22 +123,8 @@ class OCR(metaclass=SingletonOptmizedOptmized):
                 # print(item_type, color, count)
                 color_counts[item_type] = count
 
-            # print(sorted(color_counts.items(), key=lambda item: item[1], reverse=True)[0][0])
-            # item_type = sorted(color_counts.items(), key=lambda item: item[1], reverse=True)[0][0]
+            # highest pixel count is most likely item type...
             item_type = max(color_counts, key=color_counts.get)
-
-                # unique, counts = np.unique(row_data, return_counts=True)
-                # count_dict = dict(zip(unique, counts))
-                # print("Magic", count_dict[self.ITEM_TYPES["Magic"]])
-                # print("Rare", count_dict[self.ITEM_TYPES["Rare"]])
-                # print("Unique", count_dict[self.ITEM_TYPES["Unique"]])
-
-            # colors, counts = np.unique(row_data, return_counts=True, axis=0)
-            # print(list(zip(colors, counts)))
-
-
-            # import time; time.sleep(1)
-            # exit()
 
             annotated_bounds.append(
                 ((top_left, top_right, bottom_right, bottom_left), text, item_type)

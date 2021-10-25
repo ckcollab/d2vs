@@ -15,9 +15,7 @@ def cursor_scan(x1, y1, x2, y2, desired_text):
     :return:
     """
     mouse_move(618, 1329)  # hover over red health orb
-    readings = OCR().read(406, 1116, 826, 1212, delay=.5)
+    readings = OCR().read(406, 1116, 826, 1212, delay=.5, coords_have_been_translated=False)
     # print("is_in_game results:")
     # print(readings)
     return any(['life:' in text.lower() for _, text, _ in readings])
-
-    pass
