@@ -1,20 +1,24 @@
 import os
 import numpy as np
+import psutil
 import pyautogui
 
 from datetime import datetime
 from time import sleep, time
 from threading import Thread
 
+from pygetwindow import PyGetWindowException
+
 from d2vs.exceptions import ChickenException, CanNoLongerBotException
-from d2vs.helpers import click, shift_attack, coord_translation
+from d2vs.helpers import click, shift_attack, coord_translation, slow_click
 from d2vs.modules import Town, Chicken, PickIt
 from d2vs.ocr import OCR
 from d2vs.pickit import pick_area
 from d2vs.thread_hacks import ctype_async_raise
 from d2vs.window import Window
 
-from state_checks import is_corpse_on_ground, is_at_character_select_screen, is_in_queue, is_mercenary_alive, is_in_game
+from state_checks import is_corpse_on_ground, is_at_character_select_screen, is_in_queue, is_mercenary_alive, \
+    is_in_game, is_game_errored_out
 
 
 class Bot:
@@ -72,9 +76,13 @@ class Bot:
 
         if win and any(w.title == "Diablo II: Resurrected" for w in win):  # make sure it's the exact title and not some youtube video!
             # Get first window matching exact title..
-            win = [w for w in win if w.title == "Diablo II: Resurrected"]
+            win = [w for w in win if w.title == "Diablo II: Resurrected"][0]
 
-            win[0].activate()
+            try:
+                win.activate()
+            except PyGetWindowException:
+                # wtf happened? had this error once when i interrupted bot and minimized it..
+                return
 
             # Let screen scan fill OCR with data before we start
             sleep(1)
@@ -89,6 +97,43 @@ class Bot:
             sleep(10)
             pyautogui.press('space')  # press any key to continue bullshit ...
             sleep(3)
+
+
+
+
+
+        # sleep(1)
+        # readings = OCR().read(700, 1, 2599, 750, coords_have_been_translated=False, width_ths=0.5)
+        # for r in readings:
+        #     print(r)
+        #
+        # print("---------------------------")
+        #
+        # readings = OCR().read(700, 1, 2599, 750, coords_have_been_translated=False, width_ths=0.8)
+        # for r in readings:
+        #     print(r)
+        #
+        # sleep(5555)
+
+
+
+
+
+
+
+
+
+
+        # Is this an error window?
+        if is_game_errored_out(win):
+            print("Game is errored out? Restarting..")
+            for proc in psutil.process_iter():
+                if proc.name() in ('D2R.exe', 'BlizzardError.exe'):
+                    print(f"killing {proc.name()}")
+                    p = psutil.Process(proc.pid)
+                    for child in p.children(recursive=True):  # or parent.children() for recursive=False
+                        child.kill()
+                    p.kill()
 
         # In queue?
         queue_check_count = 0
@@ -146,31 +191,40 @@ class Bot:
         # TODO: CHECK THIS!
 
         # Go near WP and prepare for merc check...
-        click(765, 1200)
-        click(800, 1145, delay=1.45)
+        """
+        750, 1180
+        896, 1126
+        961, 1290
+        """
+        click(750, 1180)
+        click(896, 1126, delay=1.65)
 
         # Is merc alive?
         if is_mercenary_alive():
             # go straight to red portal
             # print("ahoy merc nice to see ya")
-            click(999, 1286, delay=1.55)  # this goes past WP next to lil rock wall (2 clicks close together works nice for some reason ..)
-            click(999, 1286, delay=.05)
-            click(1131, 1269, delay=1.45)
+            # click(999, 1286, delay=1.55)  # this goes past WP next to lil rock wall (2 clicks close together works nice for some reason ..)
+            # click(1131, 1269, delay=1.45)
+            click(961, 1290, delay=1.55)
+            click(961, 1290, delay=0.1)  # double click is requisite for some reason to properly travel a consistent distance..
+
         else:
             # go to Act 4, revive merc, come back, resume path to go to red portal
-            print("merc DEAD!")
+            print("Merc dead! Reviving... hope I don't get stuck in act 4!")
 
-            click(1155, 916, delay=1.5)  # click wp
-            click(659, 295, delay=1.0)   # click act 4
-            click(319, 358, delay=1.5)   # click Pandamonium Fortress
-            click(315, 10, delay=8.5)    # click Tyrael
+            pyautogui.press('f7')  # telekenisis
+            slow_click(1100, 916, delay=1.0, button="right")  # click wp
+            # click(1100, 916, delay=.05)                     # click wp twice
+            click(659, 295, delay=2.0)                        # click act 4
+            click(319, 358, delay=2.5)                        # click Pandamonium Fortress
+            slow_click(315, 10, delay=10.5)                   # click Tyrael
 
             # Search for "Resurrect: " text and click the center of it
             x1, y1 = coord_translation(512, 16)
             x2, y2 = coord_translation(1697, 699)
             resurrect_readings = OCR().read(x1, y1, x2, y2, delay=2.5, coords_have_been_translated=True)
-            print("resurrect_readings results:")
-            print(resurrect_readings)
+            # print("resurrect_readings results:")
+            # print(resurrect_readings)
             for (top_left, top_right, bottom_right, bottom_left), text, _ in resurrect_readings:
                 if "resurrect" in text.lower():
                     center_y = int(y1 + top_left[1] + ((bottom_right[1] - top_left[1]) / 2))
@@ -185,19 +239,20 @@ class Bot:
                         raise CanNoLongerBotException("Can no longer bot. no mercenary :( not enough gold to revive.")
                     break
 
-            click(2125, 1059, delay=1.0)  # click wp
-            click(774, 292, delay=2.5)    # click act 5
-            click(322, 350, delay=1.0)    # click harrogath
-            click(1135, 1014, delay=8.5)  # click next to rock wall and continue normal path
+            slow_click(2125, 1059, delay=1.0)  # click wp
+            click(774, 292, delay=2.5)         # click act 5
+            click(322, 350, delay=1.0)         # click harrogath
+            click(1135, 1014, delay=8.5)       # click next to rock wall and continue normal path
 
-        click(641, 883, delay=1.3)
+        click(1131, 1269, delay=1.45)
+        click(641, 883, delay=1.4)
         pyautogui.press('f7')  # telekenisis
-        click(350, 475, delay=1.5, button="right")
-        click(350, 400, delay=.8, button="right")  # sometimes first one doesnt work ... click a little up
-        click(435, 325, delay=.8, button="right")  # sometimes first one doesnt work ... click a lot up and to the right
+        slow_click(325, 500, delay=1.5, button="right")
+        # slow_click(350, 400, delay=0.4, button="right")  # sometimes first one doesnt work ... click a little up
+        slow_click(435, 325, delay=0.4, button="right")  # sometimes first one doesnt work ... click a lot up and to the right
 
         # TP to pindle
-        sleep(1)
+        sleep(.5)
         pyautogui.press('f5')  # teleport
 
         click(1400, 700, delay=1.25)  # take a quick step forward before TPing
@@ -209,15 +264,15 @@ class Bot:
         click(1557, 352, delay=.45, button="right")  # blizz
 
         # Glacier opener
-        shift_attack(1557, 352)
+        # shift_attack(1557, 352)
 
         # Final attack combo
         for _ in range(2):
             shift_attack(1557, 352, duration=1.75)  # glaciers
-            click(1557, 352, delay=.5, button="right")  # blizz
+            click(1557, 352, delay=.4, button="right")  # blizz
 
         # wait for merc to maybe kill cold immune guy?
-        sleep(1.5)
+        sleep(.5)
 
         # Read under cursor, cold immune?
         # todo..
@@ -225,14 +280,14 @@ class Bot:
         # Check items?
         # pyautogui.press('f5')  # teleport closer..
         # click(1775, 400, delay=.5, button="right")
-        pick_area(700, 1, 2599, 750)
+        pick_area(500, 1, 2599, 750)
 
         # leave game...
         pyautogui.press('esc')
         click(1275, 633, delay=.5)
 
         # wait for next!
-        sleep(20)
+        sleep(22)
 
     def run(self):
         # daemon=True here so when we close the app this thread closes cleanly, doesn't seem to otherwise..

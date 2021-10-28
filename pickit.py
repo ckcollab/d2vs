@@ -62,8 +62,12 @@ def pick_area(base_x=500, base_y=300, end_x=1900, end_y=1000, max_loops=8):
             base_y,
             end_x,
             end_y,
-            save_debug_images=current_loop == 0,  # only save first loop
             coords_have_been_translated=True,
+            # Only saving these images, typically groups items better
+            save_debug_images=current_loop == 0,  # only save first loop
+
+            # combine text found near each other at 0.8, pretty large margin
+            width_ths=0.8,
         )
 
         # TODO: Algorithm to detect mis-picks!
@@ -84,6 +88,19 @@ def pick_area(base_x=500, base_y=300, end_x=1900, end_y=1000, max_loops=8):
 
                     if pickable:
                         send_mail(f"[D2VS] Found {item_type} {text}", "Nothing much else to say chief!")
+
+
+        # Do a SECOND scan to make sure we aren't missing any potential items!
+        bounded_text += OCR().read(
+            base_x,
+            base_y,
+            end_x,
+            end_y,
+            coords_have_been_translated=True,
+
+            # combine text found near each other at a small margin, in case any items accidentally merged during scan!
+            width_ths=0.55,
+        )
 
         any_pickable = False
 

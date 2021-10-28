@@ -1,6 +1,6 @@
 import numpy as np
 
-from d2vs.helpers import mouse_move, coord_translation
+from d2vs.helpers import mouse_move, coord_translation, CURRENT_RESOLUTION_WIDTH, CURRENT_RESOLUTION_HEIGHT
 from d2vs.ocr import OCR
 
 
@@ -21,6 +21,23 @@ def is_corpse_on_ground():
         if any('corpse' in text.lower() for _, text, _ in results):
             return True
     return False
+
+
+def is_game_errored_out(win):
+    """
+    Looks at the size of the "Diablo II: Resurrected" window to see if it's a little error window or equal to resolution
+
+    :param win: Game window
+    :return:
+    """
+    try:
+        width, height = win.size
+    except AttributeError:
+        # no size? bad window!
+        return False
+
+    # If we take in a margin of 100.. is this window still smaller, must not be fullscreen, must be an error?
+    return CURRENT_RESOLUTION_WIDTH - 100 > width or CURRENT_RESOLUTION_HEIGHT - 100 > height
 
 
 def is_at_character_select_screen():

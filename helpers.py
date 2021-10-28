@@ -33,11 +33,11 @@ def coord_translation(x, y, original=RESOLUTIONS["1440p"], new=(CURRENT_RESOLUTI
     return translation
 
 
-def mouse_move(x, y, delay=.1):
+def mouse_move(x, y, delay=.1, duration=0.0):
     sleep(delay)
     # print(f"??????? orig {x}, {y}")
     # print(*coord_translation(x, y))
-    pyautogui.moveTo(*coord_translation(x, y))
+    pyautogui.moveTo(*coord_translation(x, y), duration=duration)
 
 
 # def click(x, y, delay=.1, button=mouse.Button.LEFT):
@@ -48,6 +48,12 @@ def click(x, y, delay=.1, button="left"):
     sleep(delay)
     x, y = coord_translation(x, y)
     pyautogui.click(x=x, y=y, button=button)
+
+
+def slow_click(x, y, delay=.1, duration=0.1, button="left"):
+    """Instead of a normal click, this moves the mouse to the location, waits a moment, then clicks."""
+    mouse_move(x, y, delay=delay, duration=duration)
+    click(x, y, button=button)
 
 
 def shift_attack(x, y, duration=1.0):
