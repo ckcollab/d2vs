@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import mss
 import psutil
 import pyautogui
 
@@ -40,13 +41,17 @@ class Bot:
         # keyboard.add_hotkey('pause', lambda: exit(1))  # .... does not work ....
 
     def _screen_scan_loop(self):
+
+        screen_capture_tool = mss.mss()
+
         while True:
             if pyautogui.getActiveWindowTitle() != "Diablo II: Resurrected":
                 sleep(.1)
                 continue
 
             try:
-                screen_data = np.array(self.window.screen)
+                # screen_data = np.array(self.window.screen)
+                screen_data = np.array(screen_capture_tool.grab(screen_capture_tool.monitors[0]))
 
                 # This should be just about the only place we do that. Capturing the screen is relatively expensive.
                 OCR().set_screen_data(screen_data)
