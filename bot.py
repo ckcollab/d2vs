@@ -41,27 +41,25 @@ class Bot:
         # keyboard.add_hotkey('pause', lambda: exit(1))  # .... does not work ....
 
     def _screen_scan_loop(self):
+        with mss.mss() as screen_capture_tool:
+            while True:
+                if pyautogui.getActiveWindowTitle() != "Diablo II: Resurrected":
+                    sleep(.1)
+                    continue
 
-        screen_capture_tool = mss.mss()
+                try:
+                    # screen_data = np.array(self.window.screen)
+                    screen_data = np.array(screen_capture_tool.grab(screen_capture_tool.monitors[0]))
 
-        while True:
-            if pyautogui.getActiveWindowTitle() != "Diablo II: Resurrected":
-                sleep(.1)
-                continue
+                    # This should be just about the only place we do that. Capturing the screen is relatively expensive.
+                    OCR().set_screen_data(screen_data)
 
-            try:
-                # screen_data = np.array(self.window.screen)
-                screen_data = np.array(screen_capture_tool.grab(screen_capture_tool.monitors[0]))
-
-                # This should be just about the only place we do that. Capturing the screen is relatively expensive.
-                OCR().set_screen_data(screen_data)
-
-                for name, module in self.modules.items():
-                    module.on_screen_capture(screen_data)
-                sleep(.01)
-            except ChickenException:
-                # Re-raise this chicken event in our game bot thread
-                ctype_async_raise(self.game_thread.ident, ChickenException)
+                    for name, module in self.modules.items():
+                        module.on_screen_capture(screen_data)
+                    sleep(.01)
+                except ChickenException:
+                    # Re-raise this chicken event in our game bot thread
+                    ctype_async_raise(self.game_thread.ident, ChickenException)
 
     def _game_loop_wrapper(self):
         """This wrapper is for catching chicken events and such..."""
