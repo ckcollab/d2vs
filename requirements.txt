@@ -1,8 +1,2 @@
-keyboard
-pyautogui
-# try this out?
-#mouse
-
-psutil
-
-python-dotenv==0.19.1
+easyocr==1.4.1
+numpy==1.21.4

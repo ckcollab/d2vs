@@ -1,29 +1,24 @@
-import traceback
-from uuid import uuid4
-
 import easyocr
 import os
 import numpy as np
+import traceback
+
 from PIL import Image
-from time import sleep, time
+from time import time
 
-from constants import ITEM_TYPES
-from d2vs.helpers import coord_translation
-from singleton import SingletonOptmizedOptmized
-from window import Window
+from .constants import ITEM_TYPES
 
 
-# class OCR:
-class OCR(metaclass=SingletonOptmizedOptmized):
+BASE_PATH = os.path.dirname(os.path.realpath(__file__))
+
+
+class OCR:
     def __init__(self):
-        # self.window = Window()
-        self.screen_data = None
         self.reader = easyocr.Reader(
             ['en'],
-            model_storage_directory="./ocr_model",
-            user_network_directory='./ocr_network',
+            model_storage_directory=os.path.join(BASE_PATH, 'ocr_model'),
+            user_network_directory=os.path.join(BASE_PATH, 'ocr_network'),
             recog_network='d2rg',
-            # download_enabled=False,
         )
 
         # Just in case we want to save training images..
@@ -33,59 +28,34 @@ class OCR(metaclass=SingletonOptmizedOptmized):
         # (files will be 0001, 0002, 0003 + labels.csv, so len() on this works great)
         self.debug_image_counter = len(os.listdir('ocr_training')) or 1
 
-    def set_screen_data(self, data):
-        """This is called many times a second. If you want to scan the latest data, add a small delay
-        before scanning."""
-        self.screen_data = data
-
-        # print(f"Set screen data, I am {id(self)}")
-
-    def read(self, x1, y1, x2, y2, save_debug_images=False, delay=.1, coords_have_been_translated="Unset", width_ths=0.5):
+    def read(self, screen_data, x1=None, y1=None, x2=None, y2=None, save_debug_images=False, width_ths=1.5):
         """
         Scans an area and returns the bounded text boxes, as well as a guess for the Item Type.
 
-        Must have screen_data set before calling.
-
-        These coordinates are by default NOT translated! These are raw coordinates, translate before calling this
-        function or pass translate_coords=True
-
+        :param screen_data: np array of pixel data
         :param x1:
         :param y1:
         :param x2:
         :param y2:
         :param save_debug_images: If True debug images are saved for machine learning later, to ocr_training/
-        :param delay: how long to wait before scanning the area
-        :param coords_have_been_translated: whether or not to translate coords from 1440p to current resolution, you must specify this!
         :param width_ths: Maximum horizontal distance to merge boxes; default = 0.6; useful to try a couple values to check for items!
         :return:
         """
-        # Small delay so screen data can be written before we read..
-        sleep(delay)
+        height, width, color_channels = screen_data.shape
 
-        assert coords_have_been_translated != "Unset", "You must set coords_have_been_translated to True or False!"
-
-        # print("old:", x1, y1, x2, y2)
-
-        if not coords_have_been_translated:
-            x1, y1 = coord_translation(x1, y1)
-            x2, y2 = coord_translation(x2, y2)
-
-        # print("new:", x1, y1, x2, y2)
-
-        # if x1 <= 0:
-        #     x1 = 1
-        # if y1 <= 0:
-        #     y1 = 1
-        # if x2 <= 0:
-        #     x2 = 1
-        # if y2 <= 0:
-        #     y2 = 1
-
-        assert self.screen_data is not None, "You must call OCR.set_screen_data before calling OCR.read"
+        # defaults should be full width/height if not given
+        if x1 is None:
+            x1 = 0
+        if y1 is None:
+            y1 = 0
+        if x2 is None:
+            x2 = width
+        if y2 is None:
+            y2 = height
 
         bounds = self.reader.readtext(
             # Cut window up, only do certain part
-            self.screen_data[y1:y2, x1:x2],
+            screen_data[y1:y2, x1:x2],
 
             # Maximum shift in y direction. Boxes with different level should not be merged. default = 0.5
             ycenter_ths=0.08,
@@ -94,7 +64,7 @@ class OCR(metaclass=SingletonOptmizedOptmized):
             width_ths=width_ths,
 
             # Amount of boundary space around the letter/word when the coordinates are returned
-            low_text=0.3,
+            # low_text=0.3,
 
             # Amount of distance allowed between two characters for them to be seen as a single word
             # link_threshold=0.6,
@@ -108,11 +78,19 @@ class OCR(metaclass=SingletonOptmizedOptmized):
             # x_ths=1.0,
         )
 
+        # # TODO: Just recognize? faster? no segmentation?
+        # img, img_cv_grey = reformat_input(screen_data)
+        #
+        # bounds = self.reader.recognize(
+        #     # Cut window up, only do certain part
+        #     img_cv_grey[y1:y2, x1:x2],
+        # )
+
         annotated_bounds = []
         for (top_left, top_right, bottom_right, bottom_left), text, _ in bounds:
             # from the left to the right, right down the center, only a couple rows of pixels (through the center)
             center_y = int(y1 + top_left[1] + ((bottom_right[1] - top_left[1]) / 2))
-            row_data = self.screen_data[center_y - 1:center_y + 1, int(x1 + top_left[0]):int(x1 + bottom_right[0])]
+            row_data = screen_data[center_y - 1:center_y + 1, int(x1 + top_left[0]):int(x1 + bottom_right[0])]
 
             color_counts = {}
             for item_type, colors in ITEM_TYPES.items():
@@ -132,7 +110,7 @@ class OCR(metaclass=SingletonOptmizedOptmized):
             # TODO: Only saving ethereal/socketed because that's the hardest to read... stop doing that?
             if save_debug_images and item_type == "Socketed/Ethereal":
                 try:
-                    item_cutout = self.screen_data[y1 + top_left[1] : y1 + bottom_right[1], x1 + top_left[0] : x1 + bottom_right[0]]
+                    item_cutout = screen_data[y1 + top_left[1]: y1 + bottom_right[1], x1 + top_left[0]: x1 + bottom_right[0]]
                     item_random_image_name = f"{self.debug_image_counter:04}-{time()}.png"
                     Image.fromarray(item_cutout).save(os.path.join('ocr_training', item_random_image_name))
                     with open(os.path.join('ocr_training', 'labels.csv'), 'a+') as f:
