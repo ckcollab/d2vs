@@ -131,6 +131,9 @@ dmypy.json
 # Dumps
 *.zip
 
+# Shitty windows setup without global git config
+.idea/
+
 # OCR stuff
 ocr_model/craft_mlt_25k.pth
 ocr_training/
