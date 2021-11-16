@@ -1,10 +1,10 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 setup(
     name="d2vs",
-    version="0.0.1",
-    packages=find_packages(),
+    version="0.0.2",
+    packages=["d2vs"],
     description="Save contacts from your terminal",
     long_description=open("README.md", "r").read(),
     long_description_content_type="text/markdown",
@@ -18,4 +18,7 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     install_requires=open("requirements.txt", "r").readlines(),
+
+    # Including things from MANIFEST.in
+    include_package_data=True,
 )

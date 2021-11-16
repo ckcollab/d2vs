@@ -135,9 +135,10 @@ dmypy.json
 .idea/
 
 # OCR stuff
-ocr_model/craft_mlt_25k.pth
-ocr_training/
-ocr_training_batch_*/
+d2vs/ocr_model/craft_mlt_25k.pth
+d2vs/ocr_model/d2rg_*.pth
+d2vs/ocr_training/
+d2vs/ocr_training_batch_*/
 
 # Configuration
 .env

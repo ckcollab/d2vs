@@ -9,12 +9,15 @@ from time import time
 from .constants import ITEM_TYPES
 
 
+BASE_PATH = os.path.dirname(os.path.realpath(__file__))
+
+
 class OCR:
     def __init__(self):
         self.reader = easyocr.Reader(
             ['en'],
-            model_storage_directory="./ocr_model",
-            user_network_directory='./ocr_network',
+            model_storage_directory=os.path.join(BASE_PATH, 'ocr_model'),
+            user_network_directory=os.path.join(BASE_PATH, 'ocr_network'),
             recog_network='d2rg',
         )
 
@@ -28,11 +31,6 @@ class OCR:
     def read(self, screen_data, x1=None, y1=None, x2=None, y2=None, save_debug_images=False, width_ths=1.5):
         """
         Scans an area and returns the bounded text boxes, as well as a guess for the Item Type.
-
-        Must have screen_data set before calling.
-
-        These coordinates are by default NOT translated! These are raw coordinates, translate before calling this
-        function or pass translate_coords=True
 
         :param screen_data: np array of pixel data
         :param x1:

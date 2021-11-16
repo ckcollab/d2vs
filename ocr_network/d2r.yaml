@@ -1,9 +1,0 @@
-# This was an attempt at doing RGB..
-network_params:
-  input_channel: 3
-  output_channel: 256
-  hidden_size: 256
-imgH: 64
-lang_list:
-         - 'en'
-character_list: 0123456789!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~ ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz

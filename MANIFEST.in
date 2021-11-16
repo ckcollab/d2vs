@@ -1,0 +1,2 @@
+include d2vs/ocr_model/d2rg.pth
+recursive-include d2vs/ocr_network *
