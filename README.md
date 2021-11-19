@@ -44,6 +44,16 @@ $ conda install torch torchvision cudatoolkit=10.1 -c pytorch
 'Normal'
 ```
 
+# project goals
+
+ - Have fun automating single player! Not for profit
+ - OCR with near 100% accuracy
+ - Visually determine where you are in game, area level and world coordinate system
+ - Click from world coords to screen coords
+ - Path through unexplored areas to a goal
+ - Facilitate complete d2 bot from lvl 1 to 99
+ - Pick it
+
 # development
 
 ## setup
