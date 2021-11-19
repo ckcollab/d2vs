@@ -25,7 +25,7 @@ $ conda install torch torchvision cudatoolkit=10.1 -c pytorch
 </div>
 
 
-```bash
+```py
 >>> import numpy as np
 >>> from d2vs.ocr import OCR
 >>> from PIL import Image
