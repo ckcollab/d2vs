@@ -1,6 +1,10 @@
-# d2vs
+<div align="center">
 
-diablo 2 vision system
+![Kiku](docs/d2vs.png)
+
+</div>
+
+
 
 ## installation
 
