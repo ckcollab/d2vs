@@ -61,6 +61,15 @@ $ conda install torch torchvision cudatoolkit=10.1 -c pytorch
  - Facilitate complete d2 bot from lvl 1 to 99
  - Pick it
 
+<div align="center">
+  
+![image](https://user-images.githubusercontent.com/2185159/142713867-b60e6dd6-08d9-4e55-862e-dba55cffff67.png)
+
+
+  _an example map reading from d2vs of black marsh_
+  
+</div>
+
 # development
 
 ## setup
