@@ -42,9 +42,12 @@ $ conda install torch torchvision cudatoolkit=10.1 -c pytorch
 >>>
 >>> # Scan the image
 >>> bounds, text, item_type = ocr.read(np.asarray(img, dtype='uint8'))
->>> print(text)
+>>> bounds
+([2, 2], [158, 2], [158, 32], [2, 32])
+>>> top_left, top_right, bottom_left, bottom_right = bounds
+>>> text
 '586 Gold'
->>> print(item_type)
+>>> item_type
 'Normal'
 ```
 
