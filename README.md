@@ -7,7 +7,7 @@
 
 ## what is this
 
-a library to assist with the automation of d2, using only pixels, keyboard and mouse
+diablo 2 vision system is a library to assist with the automation of d2, using only pixels, keyboard and mouse
 
 
 ## installation
