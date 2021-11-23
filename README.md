@@ -5,12 +5,12 @@
 </div>
 
 
-## what is this
+# what is this
 
 diablo 2 vision system is a library to assist with the automation of d2, using only pixels, keyboard and mouse
 
 
-## installation
+# installation
 
 ```bash
 $ pip install d2vs
