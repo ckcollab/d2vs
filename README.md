@@ -1,9 +1,13 @@
 <div align="center">
 
-![Kiku](docs/d2vs.png)
+![d2vs](docs/d2vs.png)
 
 </div>
 
+
+## what is this
+
+a library to assist with the automation of d2, using only pixels, keyboard and mouse
 
 
 ## installation
