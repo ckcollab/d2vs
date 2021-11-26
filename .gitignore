@@ -143,3 +143,6 @@ d2vs/ocr_training_batch_*/
 # Configuration
 .env
 pickit.txt
+
+# mapping..
+d2vs/mapping/captures/*
