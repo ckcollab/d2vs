@@ -235,7 +235,7 @@ def map_stitch(*files):
         images.append(image)
 
     stitcher = cv2.Stitcher_create(cv2.Stitcher_SCANS)  # scans instead of panorama mode
-    stitcher.setPanoConfidenceThresh(0.65)  # 0.7 seems to work great for black marsh
+    stitcher.setPanoConfidenceThresh(0.7)  # 0.7 seems to work great for black marsh
     # stitcher.setSeamEstimationResol(1)
     # stitcher.setCompositingResol(1)
 
@@ -267,7 +267,7 @@ def map_stitch(*files):
 
 # Do stitching
 # map_stitch(*glob("captures/*-result.png"))
-map_stitch(*glob("captures/*-difference*.png"))
+map_stitch(*glob("captures/*-difference*.png")[:10])
 
 #
 # while True:
