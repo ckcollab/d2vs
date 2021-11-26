@@ -34,25 +34,29 @@ $ conda install torch torchvision cudatoolkit=10.1 -c pytorch
 
 
 ```py
->>> import numpy as np
->>> from d2vs.ocr import OCR
->>> from PIL import Image
->>>
->>> # Initiate OCR
->>> ocr = OCR()
->>>
->>> # Load an Image
->>> img = Image.open("586_gold.png")
->>>
->>> # Scan the image
->>> bounds, text, item_type = ocr.read(np.asarray(img, dtype='uint8'))
->>> bounds
-([2, 2], [158, 2], [158, 32], [2, 32])
->>> top_left, top_right, bottom_right, bottom_left = bounds
->>> text
-'586 Gold'
->>> item_type
-'Normal'
+import numpy as np
+from d2vs.ocr import OCR
+from PIL import Image
+
+# Initiate OCR
+ocr = OCR()
+
+# Load an Image
+img = Image.open("586_gold.png")
+
+# Scan the image
+bounds, text, item_type = ocr.read(np.asarray(img, dtype='uint8'))
+
+# Print out the data for demo purposes
+top_left, top_right, bottom_right, bottom_left = bounds
+print(top_left, top_right, bottom_right, bottom_left)
+# ([2, 2], [158, 2], [158, 32], [2, 32])
+
+print(text)
+# '586 Gold'
+
+print(item_type)
+# 'Normal'
 ```
 
 # project goals
