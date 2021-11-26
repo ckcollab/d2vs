@@ -4,6 +4,7 @@ TODO:
   [ ] stitch images together using affine
   [ ] get rid of moving things by adding a second diff
 """
+import os
 from glob import glob
 from typing import NamedTuple
 
@@ -48,14 +49,45 @@ def map_capture():
         return pre, during_1, during_2
 
 
-def map_diff(pre, during_1, during_2):
-    """Takes the 3 stages of map capture and outputs a final diff, removing carvers and such"""
-    # do first diff
+def map_diff(pre, during_1, during_2, is_start=False):
+    """Takes the 3 stages of map capture and outputs a final diff, removing carvers and adding our own markers"""
 
-    # do second diff
+    # image without map
+    pre = cv2.cvtColor(pre, cv2.COLOR_BGR2GRAY)
 
-    # and both diffs together keeping only what's in both
-    pass
+    # images displaying the map, clean up some things from this display so it's less cluttered
+    # TODO: Remove merc symbol
+    # TODO: Remove player symbol
+    during_1 = cv2.cvtColor(pre, cv2.COLOR_BGR2GRAY)
+    during_2 = cv2.cvtColor(pre, cv2.COLOR_BGR2GRAY)
+
+    # Get diff of original pre-map image vs both map snapshots, combine the artifacts from both snapshots
+    threshold = 0.11
+    absdiff_1 = cv2.absdiff(pre, during_1)
+    _, thresholded_1 = cv2.threshold(absdiff_1, int(threshold * 255), 255, cv2.THRESH_BINARY)
+    absdiff_2 = cv2.absdiff(pre, during_2)
+    _, thresholded_2 = cv2.threshold(absdiff_2, int(threshold * 255), 255, cv2.THRESH_BINARY)
+
+    diffed = cv2.bitwise_and(thresholded_1, thresholded_2 )
+
+
+
+
+
+
+
+
+
+    # TODO: Mark warps with HSV
+
+    # Draw a big red/green circle that will stick around between images
+    if is_start:
+        color = (0, 0, 255)  # red
+    else:
+        color = (0, 255, 0)  # green
+    cv2.circle(diffed, (center_x, center_y), 5, color, -1)
+
+    return diffed
 
 
 def map_get_features(diff):
@@ -102,9 +134,9 @@ def map_merge_features(diff_1, diff_2):
     # cv2.imshow("Result", img3)
     # cv2.waitKey(0)
 
-    # Before merging images together .. make black  alpha? TODO: does this do _anything_ useful?
-    diff_1 = cv2.cvtColor(diff_1, cv2.COLOR_BGR2BGRA)
-    diff_2 = cv2.cvtColor(diff_2, cv2.COLOR_BGR2BGRA)
+    # Before merging images together .. make black alpha? TODO: does this do _anything_ useful? Doesn't seem to...
+    # diff_1 = cv2.cvtColor(diff_1, cv2.COLOR_BGR2BGRA)
+    # diff_2 = cv2.cvtColor(diff_2, cv2.COLOR_BGR2BGRA)
 
     # Extract location of good matches (wtf are good matches?!)
     points1 = np.zeros((len(matches), 2), dtype=np.float32)
@@ -119,20 +151,62 @@ def map_merge_features(diff_1, diff_2):
     # H, mask = cv2.estimateAffinePartial2D(points1, points2)  # ??? don't think we need this? doesn't seem to work
     original_with_padding, new_with_padding = warpAffinePadded(diff_2, diff_1, H, flags=cv2.INTER_NEAREST)
 
+    # Debug showing padding results
+    # cv2.imshow("Result", new_with_padding)
+    # cv2.waitKey(0)
+
     # Let's find red starting point, which may be overwritten by waypoints/other things
     # so we can highlight over it again later
-    red_starting_point_mask = np.all(original_with_padding == [0, 0, 255, 255], axis=-1)
+    red_starting_point_mask = np.all(original_with_padding == [0, 0, 255], axis=-1)
+
+    # Delete any old green markers for "current location"
+    original_with_padding[np.all(original_with_padding == [0, 255, 0], axis=-1)] = [0, 0, 0]
 
     # Merge original with new
     map = cv2.bitwise_or(original_with_padding, new_with_padding)
 
     # Re-add red mask so it's super clear
-    map[red_starting_point_mask] = [0, 0, 255, 255]
+    map[red_starting_point_mask] = [0, 0, 255]
+
+
+
+
+
+
+
+    # where are we? if we're right on the red X, that'd be (10_000, 10_000)
+    # # green_current_point_mask = np.all(map == [0, 255, 0], axis=-1)
+    # green_current_point_mask = np.any(map == [0, 255, 0], axis=-1)
+    # # M = cv2.moments(green_current_point_mask)
+    # # cX = int(M["m10"] / M["m00"])
+    # # cY = int(M["m01"] / M["m00"])
+    # # print(cX, cY)
+    # import pdb; pdb.set_trace()
+    # coordinates = list(zip(green_current_point_mask[0], green_current_point_mask[1]))
+    # print(green_current_point_mask)
+    # print(coordinates)
+
+
+    red_coords = np.where(np.all(map == [0, 0, 255], axis=-1))
+    red_coords = np.transpose(red_coords)  # faster than 'zip' but does same thing ???
+    red_y, red_x = red_coords[0]
+
+    green_coords = np.where(np.all(map == [0, 255, 0], axis=-1))
+    green_coords = np.transpose(green_coords)  # faster than 'zip' but does same thing ???
+    green_y, green_x = green_coords[0]
+
+    # red is start at 10_000, 10_000 so base it off that...
+    current_x, current_y = 10_000 + green_x - red_x, 10_000 + green_y - red_y
+
+
+
+
+
 
     # Debug showing final map!!!
     # cv2.imshow("Result", map)
     # cv2.waitKey(0)
-    return map
+    return map, current_x, current_y
 
 
 def map_process():
@@ -160,28 +234,31 @@ if __name__ == "__main__":
     # map = map_merge_features(map, diff_4)
 
     counter = 0
-    try:
-        while True:
-            if counter == 0:
-                map = cv2.imread(f"captures/{counter}-difference-map.png")
+    # try:
+    while True:
+        if counter == 0:
+            map = cv2.imread(f"captures/{counter}-difference-map.png")
 
-            diff = cv2.imread(f"captures/{counter + 1}-difference-map.png")
+        next_img_path = f"captures/{counter + 1}-difference-map.png"
+        if not os.path.exists(next_img_path):
+            break
+        diff = cv2.imread(next_img_path)
 
-            images.append(map)
+        images.append(map)
 
-            start = time()
-            map = map_merge_features(map, diff)
+        start = time()
+        map, x, y = map_merge_features(map, diff)
 
-            counter += 1
-            print(f"Capture {counter} processing: Took {(time() - start) * 1000}ms")
+        counter += 1
+        print(f"Capture {counter} @ ({x}, {y}) in {(time() - start) * 1000}ms")
 
-            # Debug showing final map!!!
-            cv2.imshow("Result", map)
-            cv2.waitKey(0)
+        # Debug showing final map!!!
+        cv2.imshow("Result", map)
+        cv2.waitKey(0)
 
 
-    except:
-        pass  # lazy exit on file read error
+    # except:
+    #     pass  # lazy exit on file read error
 
 
 
