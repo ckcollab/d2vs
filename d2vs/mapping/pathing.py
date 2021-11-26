@@ -1,4 +1,8 @@
-from .capture2 import map_capture, map_merge_features, map_diff
+from time import sleep
+
+from cv2 import cv2
+
+from capture2 import map_capture, map_merge_features, map_diff
 
 
 DIRECTION_NORTH_WEST = 1
@@ -10,8 +14,8 @@ DIRECTION_SOUTH_WEST = 4
 class Node:
     def __init__(self, x, y, diff, connections=None, unwalkable=False, is_start=False, is_end=False):
         # Sanity checks..
-        assert not is_start and connections, "Must set at least one direction, we had to have come from " \
-                                             "somewhere?! Unless we just started, then mark is_start = True"
+        # assert not is_start and connections, "Must set at least one direction, we had to have come from " \
+        #                                      "somewhere?! Unless we just started, then mark is_start = True"
 
         assert not (is_start and is_end), "Cannot be start and end node at the same time!? or can you.. maybe!?"
 
@@ -77,28 +81,57 @@ def find_and_enter_warp(text, preferred_direction=DIRECTION_NORTH_WEST):
         a. go back to start ?
     4. 
     """
-    map = None
-    counter = 0
-    prev_node = False
+
+
+
+
+
+    # pre, during_1, during_2 = map_capture()
+    # cv2.imshow("Result", pre)
+    # cv2.waitKey(0)
+    # exit()
+
+
+
+
+
+
 
     # Start...
-    new_node = Node(
-        is_start=counter == 0,
-        diff=map_diff(*map_capture(), is_start=True),
+    counter = 0
+    map = map_diff(*map_capture(), is_start=True)
+    prev_node = Node(
+        10_000,
+        10_000,
+        map,
+        is_start=True,
     )
 
-    while True:
+    sleep(2)
 
+    while True:
         diff = map_diff(*map_capture())
         map, x, y = map_merge_features(map, diff)
 
         new_node = Node(x, y, diff)
 
-        if counter != 0:
-            prev_node.connections[what direction were we coming from??]
+        # if counter != 0:
+        #     prev_node.connections[what direction were we coming from??]
+
+
+        sleep(2)
+
+
+
+        counter += 1
+
+        if counter == 10:
+            break
 
         prev_node = new_node
 
+    cv2.imshow("Result", map)
+    cv2.waitKey(0)
 
 
 
@@ -117,4 +150,7 @@ def find_and_enter_warp(text, preferred_direction=DIRECTION_NORTH_WEST):
     # otherwise: we need to pick a direction to go and continue looking
     #   look based on preferred_direction
     #
-    pass
+
+
+if __name__ == "__main__":
+    find_and_enter_warp("Durance of Hate Level 2", preferred_direction=DIRECTION_NORTH_EAST)

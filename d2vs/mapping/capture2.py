@@ -35,18 +35,50 @@ def map_capture():
     """
     with mss.mss() as sct:
         # Before map is shown
-        pre = sct.grab(monitor)
+        pre = np.array(sct.grab(monitor))
+        pre = cv2.cvtColor(pre, cv2.COLOR_BGRA2BGR)
         keyboard.press_and_release("tab")
         sleep(.075)
 
         # Map is shown
-        during_1 = sct.grab(monitor)
+        during_1 = np.array(sct.grab(monitor))
+        during_1 = cv2.cvtColor(during_1, cv2.COLOR_BGRA2BGR)
         sleep(.075)
 
         # Map is still there, but we can tell if any carvers/flames are underneath fucking up the diff
-        during_2 = sct.grab(monitor)
+        during_2 = np.array(sct.grab(monitor))
+        during_2 = cv2.cvtColor(during_2, cv2.COLOR_BGRA2BGR)
         keyboard.press_and_release("tab")
+
+        # Debug showing captures
+        # cv2.imshow('pre', pre)
+        # cv2.waitKey(0)
+        # cv2.imshow('during 1', during_1)
+        # cv2.waitKey(0)
+        # cv2.imshow('during 2', during_2)
+        # cv2.waitKey(0)
         return pre, during_1, during_2
+
+
+def _mask_image(img, color, background="None"):
+    range_start, range_end = _color_rgb_to_bgr_range(color)
+    img_mask = cv2.inRange(img, range_start, range_end)
+
+    # expand what we found to cover the whole thing, make the whole blur part of the mask via threshold
+    img_mask = cv2.blur(img_mask, (4, 4))
+    _, img_mask = cv2.threshold(img_mask, int(0.1 * 255), 255, cv2.THRESH_BINARY)
+
+    if background == "None":
+        return cv2.bitwise_and(img, img, mask=255 - img_mask)
+    else:
+        return cv2.bitwise_and(img, img, mask=255 - img_mask)
+
+
+def _color_rgb_to_bgr_range(color, range=1.0):
+    r, g, b = color
+    offset = int(range / 2)
+    # return (b - offset, g - offset, r - offset), (b + offset, g + offset, r + offset)
+    return (b - (12 * range), g - (8 * range), r - (8 * range)), (b + (12 * range), g + (8 * range), r + (8 * range))
 
 
 def map_diff(pre, during_1, during_2, is_start=False):
@@ -56,19 +88,30 @@ def map_diff(pre, during_1, during_2, is_start=False):
     pre = cv2.cvtColor(pre, cv2.COLOR_BGR2GRAY)
 
     # images displaying the map, clean up some things from this display so it's less cluttered
-    # TODO: Remove merc symbol
-    # TODO: Remove player symbol
-    during_1 = cv2.cvtColor(pre, cv2.COLOR_BGR2GRAY)
-    during_2 = cv2.cvtColor(pre, cv2.COLOR_BGR2GRAY)
+    original_during_1 = during_1.copy()
+    during_1 = _mask_image(during_1, (0x20, 0x84, 0xF6))  # player marker
+    during_1 = _mask_image(during_1, (0x44, 0x70, 0x74))  # merc marker
+
+    during_1 = cv2.cvtColor(during_1, cv2.COLOR_BGR2GRAY)
+    # during_2 = cv2.cvtColor(during_2, cv2.COLOR_BGR2GRAY)
 
     # Get diff of original pre-map image vs both map snapshots, combine the artifacts from both snapshots
     threshold = 0.11
     absdiff_1 = cv2.absdiff(pre, during_1)
     _, thresholded_1 = cv2.threshold(absdiff_1, int(threshold * 255), 255, cv2.THRESH_BINARY)
-    absdiff_2 = cv2.absdiff(pre, during_2)
-    _, thresholded_2 = cv2.threshold(absdiff_2, int(threshold * 255), 255, cv2.THRESH_BINARY)
+    # absdiff_2 = cv2.absdiff(pre, during_2)
+    # _, thresholded_2 = cv2.threshold(absdiff_2, int(threshold * 255), 255, cv2.THRESH_BINARY)
 
-    diffed = cv2.bitwise_and(thresholded_1, thresholded_2 )
+    # diffed = cv2.bitwise_and(thresholded_1, thresholded_2)
+    diffed = thresholded_1
+
+    # Debug showing diff before adding circles
+    # cv2.imshow('absdiff_1', absdiff_1)
+    # cv2.waitKey(0)
+    # cv2.imshow('absdiff_2', absdiff_2)
+    # cv2.waitKey(0)
+    # cv2.imshow('diffed', diffed)
+    # cv2.waitKey(0)
 
 
 
@@ -78,14 +121,46 @@ def map_diff(pre, during_1, during_2, is_start=False):
 
 
 
-    # TODO: Mark warps with HSV
 
-    # Draw a big red/green circle that will stick around between images
+
+    # Draw a big red/green circle + warps that will stick around between images
+    diffed = cv2.cvtColor(diffed, cv2.COLOR_GRAY2BGR)
+
+
+
+
+
+    # were there any warps here? highlight them!
+    # range_start, range_end = color_rgb_to_bgr_range((0xD9, 0x58, 0xEB))  # gets top of warp
+    # range_start, range_end = color_rgb_to_bgr_range((0xA2, 0x46, 0xEA))  # middle of warp
+    # range_start, range_end = color_rgb_to_bgr_range((0xB5, 0x4C, 0xEB))  # middle of warp
+    range_start, range_end = _color_rgb_to_bgr_range((0x8D, 0x3C, 0xB2), range=1.5)  # middle of warp
+    # range_start, range_end = (0xEB - 15, 0x58 - 15, 0xD9 - 15), (0xEA + 15, 0x46 + 15, 0xA2 + 15)
+    warp_mask = cv2.inRange(original_during_1, range_start, range_end)
+    warp_mask = cv2.blur(warp_mask, (5, 5))
+    _, warp_mask = cv2.threshold(warp_mask, int(0.1 * 255), 255, cv2.THRESH_BINARY)
+
+    diffed[warp_mask > 0] = [0xD9, 0x58, 0xEB]  # Where ever there is a warp color it in with da purps
+
+
+
+
+
+
+
+
+
+
     if is_start:
         color = (0, 0, 255)  # red
     else:
         color = (0, 255, 0)  # green
+
     cv2.circle(diffed, (center_x, center_y), 5, color, -1)
+
+    # Debug showing diff post circles
+    # cv2.imshow('diffed', diffed)
+    # cv2.waitKey(0)
 
     return diffed
 
