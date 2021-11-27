@@ -63,8 +63,7 @@ def find_and_enter_warp(text, preferred_direction=DIRECTION_NORTH_WEST):
 
 
     """
-    ##1. Take picture of current area, set start pos
-    ##2. Pick a direction, starting with preferred_direction
+
     3. Take a picture:
         a. diff happens first to calc x/y
         a. Create `new_node` (`if counter == 0 then is_start = True`, skip rest)
@@ -99,6 +98,9 @@ def find_and_enter_warp(text, preferred_direction=DIRECTION_NORTH_WEST):
 
     # Start...
     counter = 0
+
+    sleep(2)
+
     map = map_diff(*map_capture(), is_start=True)
     prev_node = Node(
         10_000,
@@ -107,21 +109,36 @@ def find_and_enter_warp(text, preferred_direction=DIRECTION_NORTH_WEST):
         is_start=True,
     )
 
-    sleep(2)
 
     while True:
+        sleep(1)
+
+
         diff = map_diff(*map_capture())
         map, x, y = map_merge_features(map, diff)
+
+
+
+
+
+
+        # TODO: Did we not move very far? If so, we should change to a new preferred_direction and go until we can't any more
+
+
+
+
+
+
+
+
+
+
+
 
         new_node = Node(x, y, diff)
 
         # if counter != 0:
         #     prev_node.connections[what direction were we coming from??]
-
-
-        sleep(2)
-
-
 
         counter += 1
 
