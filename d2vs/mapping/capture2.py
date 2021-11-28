@@ -97,7 +97,6 @@ def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True
     # during_2 = cv2.cvtColor(during_2, cv2.COLOR_BGR2GRAY)
 
     # Get diff of original pre-map image vs both map snapshots, combine the artifacts from both snapshots
-    threshold = 0.11
     absdiff_1 = cv2.absdiff(pre, during_1)
     _, thresholded_1 = cv2.threshold(absdiff_1, int(threshold * 255), 255, cv2.THRESH_BINARY)
     # absdiff_2 = cv2.absdiff(pre, during_2)
@@ -149,7 +148,8 @@ def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True
         else:
             color = (0, 255, 0)  # green
 
-        cv2.circle(diffed, (center_x, center_y), 5, color, -1)
+        # I don't know why I have to offset the center x/y, but if I don't it is .. offset!
+        cv2.circle(diffed, (center_x + 4, center_y - 4), 2, color, -1)
 
     # Debug showing diff post circles
     # cv2.imshow('diffed', diffed)
@@ -170,7 +170,7 @@ def map_get_features(diff):
 
     # ORB style?
     # orb = cv2.ORB_create()
-    orb = cv2.ORB_create(nfeatures=3000, edgeThreshold=0, scoreType=cv2.ORB_FAST_SCORE)
+    orb = cv2.ORB_create(nfeatures=5000, edgeThreshold=0, scoreType=cv2.ORB_FAST_SCORE)
     # orb = cv2.ORB_create(nfeatures=1500, edgeThreshold=0, scoreType=cv2.ORB_FAST_SCORE)
     keypoints, descriptors = orb.detectAndCompute(diff, None)
     # features = cv2.drawKeypoints(diff, keypoints, None, color=(255, 0, 0))
@@ -192,6 +192,7 @@ def map_merge_features(diff_1, diff_2):
     # cv2.imshow("Result", cv2.drawKeypoints(diff_2, keypoints_2, None, color=(255, 0, 0)))
     # cv2.waitKey(0)
 
+    # *** BF MATCHER OLD
     # Match descriptors between images
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     matches = bf.match(descriptors_1, descriptors_2)
@@ -202,10 +203,6 @@ def map_merge_features(diff_1, diff_2):
     # cv2.imshow("Result", img3)
     # cv2.waitKey(0)
 
-    # Before merging images together .. make black alpha? TODO: does this do _anything_ useful? Doesn't seem to...
-    # diff_1 = cv2.cvtColor(diff_1, cv2.COLOR_BGR2BGRA)
-    # diff_2 = cv2.cvtColor(diff_2, cv2.COLOR_BGR2BGRA)
-
     # Extract location of good matches (wtf are good matches?!)
     points1 = np.zeros((len(matches), 2), dtype=np.float32)
     points2 = np.zeros((len(matches), 2), dtype=np.float32)
@@ -213,6 +210,37 @@ def map_merge_features(diff_1, diff_2):
     for i, match in enumerate(matches):
         points1[i, :] = keypoints_1[match.queryIdx].pt
         points2[i, :] = keypoints_2[match.trainIdx].pt
+
+    # # *** Flann matcher
+    # Match descriptors between images
+    # FLANN_INDEX_LSH = 6
+    # index_params = dict(
+    #     algorithm=FLANN_INDEX_LSH,
+    #     table_number=12,  # 12
+    #     key_size=20,  # 20
+    #     multi_probe_level=2,  # 2
+    # )
+    # flann = cv2.FlannBasedMatcher(index_params, {"checks": 50})
+    # matches = flann.knnMatch(descriptors_1, descriptors_2, k=2)
+    #
+    # # ratio test as per Lowe's paper
+    # points1 = np.zeros((len(matches), 2), dtype=np.float32)
+    # points2 = np.zeros((len(matches), 2), dtype=np.float32)
+    # for i, (m, n) in enumerate(matches):
+    #     if m.distance < 0.7 * n.distance:
+    #         points1[i, :] = keypoints_1[m.queryIdx].pt
+    #         points2[i, :] = keypoints_2[m.trainIdx].pt
+
+
+
+
+
+
+
+
+
+
+
 
     # This works...
     H, mask = cv2.estimateAffine2D(points2, points1)
@@ -229,6 +257,10 @@ def map_merge_features(diff_1, diff_2):
 
     # Delete any old green markers for "current location"
     original_with_padding[np.all(original_with_padding == [0, 255, 0], axis=-1)] = [0, 0, 0]
+
+    # Take black areas from newest diff and override old white areas in old image  # TODO: make this a mode for areas we're taking MANY shots in?
+    # original_with_padding[np.all(original_with_padding == [127, 127, 127], axis=-1)] = [0, 0, 0]  # anything that was gray -> remove it, black now
+    # original_with_padding[np.all(new_with_padding == [0, 0, 0], axis=-1)] = [127, 127, 127]  # anything black in new image -> gray, prepped to be removed if not repeated
 
     # Merge original with new
     map = cv2.bitwise_or(original_with_padding, new_with_padding)

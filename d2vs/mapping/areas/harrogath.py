@@ -4,6 +4,7 @@ from d2vs.mapping.pathing import StaticPather, Node
 
 class Harrogath(StaticMap):
     pathfinder = StaticPather
+    threshold = .2  # when doing map diffs  TODO: use this!
 
     def __init__(self, *args, **kwargs):
         # self.nodes = [

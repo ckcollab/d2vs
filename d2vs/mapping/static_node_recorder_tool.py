@@ -32,7 +32,7 @@ class AutoRecorder:
         self.last_base_x, self.lase_base_y = None, None
 
     def record_new_node(self):
-        diff = map_diff(*map_capture(), threshold=.25)
+        diff = map_diff(*map_capture(), threshold=.15)
         self.map, x, y, self.last_base_x, self.lase_base_y = map_merge_features(self.map, diff)
 
         # TODO: sanity check, is this node too close to a previous one? may min distance is like 20 pixels?
@@ -68,8 +68,15 @@ class AutoRecorder:
             x = node.x + self.last_base_x - 10_000
             y = node.y + self.lase_base_y - 10_000
             print(f"Drawing node from ({node.x}, {node.y}) to ({x}, {y})")
-            cv2.putText(map_copy, f"{node.x}, {node.y}", (x - 20, y - 15), 1, 1, (0x00, 0xff, 0x00), 2)
-            cv2.circle(map_copy, (x, y), 3, (0x00, 0xff, 0x00), -1)
+            FONT_HERSHEY_COMPLEX_SMALL = 5
+            cv2.putText(map_copy, f"{node.x}, {node.y}", (x - 20, y - 10), FONT_HERSHEY_COMPLEX_SMALL, .66, (0x00, 0xff, 0x00), 1)
+
+            if node.is_start:
+                color = (0x00, 0x00, 0xff)
+            else:
+                color = (0x00, 0xff, 0x00)
+
+            cv2.circle(map_copy, (x, y), 3, color, -1)
 
             for conn in node.get_connections():
                 conn_new_x = conn.x + self.last_base_x - 10_000
