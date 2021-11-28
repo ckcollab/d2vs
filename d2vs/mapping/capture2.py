@@ -91,6 +91,7 @@ def map_diff(pre, during_1, during_2, is_start=False):
     original_during_1 = during_1.copy()
     during_1 = _mask_image(during_1, (0x20, 0x84, 0xF6))  # player marker
     during_1 = _mask_image(during_1, (0x44, 0x70, 0x74))  # merc marker
+    during_1 = _mask_image(during_1, (0xff, 0xff, 0xff))  # npc marker
 
     during_1 = cv2.cvtColor(during_1, cv2.COLOR_BGR2GRAY)
     # during_2 = cv2.cvtColor(during_2, cv2.COLOR_BGR2GRAY)
@@ -273,7 +274,7 @@ def map_merge_features(diff_1, diff_2):
     # red is start at 10_000, 10_000 so base it off that...
     current_x, current_y = 10_000 + green_x - red_x, 10_000 + green_y - red_y
 
-
+    base_x, base_y = red_x, red_y
 
 
 
@@ -281,7 +282,7 @@ def map_merge_features(diff_1, diff_2):
     # Debug showing final map!!!
     # cv2.imshow("Result", map)
     # cv2.waitKey(0)
-    return map, current_x, current_y
+    return map, current_x, current_y, base_x, base_y
 
 
 def map_process():
