@@ -4,6 +4,13 @@ from d2vs.mapping.pathing import StaticPather, Node
 
 class Harrogath(StaticMap):
     pathfinder = StaticPather
-    nodes = [
-        Node(10_000, 10_000, is_start=True)
-    ]
+
+    def __init__(self, *args, **kwargs):
+        # self.nodes = [
+        #     Node(10_000, 10_000, is_start=True)
+        # ]
+
+        # TODO: Defining nodes this way blows ass. do it via JSON!
+
+        super().__init__(*args, **kwargs)
+

@@ -81,7 +81,7 @@ def _color_rgb_to_bgr_range(color, range=1.0):
     return (b - (12 * range), g - (8 * range), r - (8 * range)), (b + (12 * range), g + (8 * range), r + (8 * range))
 
 
-def map_diff(pre, during_1, during_2, is_start=False):
+def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True, threshold=0.11):
     """Takes the 3 stages of map capture and outputs a final diff, removing carvers and adding our own markers"""
 
     # image without map
@@ -143,21 +143,13 @@ def map_diff(pre, during_1, during_2, is_start=False):
 
     diffed[warp_mask > 0] = [0xD9, 0x58, 0xEB]  # Where ever there is a warp color it in with da purps
 
+    if show_current_location:
+        if is_start:
+            color = (0, 0, 255)  # red
+        else:
+            color = (0, 255, 0)  # green
 
-
-
-
-
-
-
-
-
-    if is_start:
-        color = (0, 0, 255)  # red
-    else:
-        color = (0, 255, 0)  # green
-
-    cv2.circle(diffed, (center_x, center_y), 5, color, -1)
+        cv2.circle(diffed, (center_x, center_y), 5, color, -1)
 
     # Debug showing diff post circles
     # cv2.imshow('diffed', diffed)
