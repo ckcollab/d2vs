@@ -13,26 +13,96 @@ from d2vs.utils import NpEncoder
 
 
 class AutoRecorder:
-    def __init__(self):
-        sleep(2)  # time to load up D2 window
+    def __init__(self, area_name, load_existing=False, prev_node=None):
+        """
 
+        :param area_name:
+        :param load_existing:
+        :param prev_node: (x, y) coords of the node to start drawing from, empty to make a new (10_000, 10_000) start node
+        """
+        # if start_node or prev_node:
+        #     assert start_node and prev_node, "If you supply a start_node/prev_node/nodes, you must also supply the others"
+
+        self.area_name = area_name
+
+        self.load_existing = load_existing
+
+        # Node the level starts from/is relative to .. the (10_000, 10_000) coordinate Node
+        self.start_node = None
+
+        # Holds our nodes, keys are tuple of (x, y) value is Node
         self.nodes = {}
+        if load_existing:
+            node_data = json.loads(open(self._get_area_level_json_path(), "r").read())
 
+            # Loop over data once and make initial set of nodes
+            for n in node_data:
+                # pop data not used in class creation
+                n_copy = n.copy()
+                n_copy.pop("connections")
+                n_copy.pop("interactables")
+                node = Node(**n_copy)
+                self.nodes[(node.x, node.y)] = node
+
+                if node.is_start:
+                    assert self.start_node is None, "We found multiple start nodes?! tried setting it twice"
+                    self.start_node = node
+
+            # Loop over data again and make connections
+            for n in node_data:
+                for c_x, c_y in n["connections"]:
+                    self.nodes[(n["x"], n["y"])].add_connection(self.nodes[(c_x, c_y)])
+
+        # We make map in record_first_node
+        self.map = None
+
+        # Points to last created node
+        if prev_node:
+            self.prev_node = self.nodes[tuple(prev_node)]
+        else:
+            self.prev_node = None
+
+        # Location of red dot (start) on map
+        self.last_base_x, self.lase_base_y = None, None
+
+    def _get_area_level_png_path(self):
+        return f"areas/static_data/{self.area_name}.png"
+
+    def _get_area_level_json_path(self):
+        return f"areas/static_data/{self.area_name}.json"
+
+    def record_first_node(self):
         self.map = map_diff(*map_capture(), is_start=True)
+
+        # Debug: show map
+        # cv2.imshow("map map", self.map)
+        # cv2.waitKey(0)
+
         self.start_node = Node(
             10_000,
             10_000,
             is_start=True,
         )
         self.nodes[(self.start_node.x, self.start_node.y)] = self.start_node
-        # Points to last created node
         self.prev_node = self.start_node
 
-        # Location of red dot (start) on map
-        self.last_base_x, self.lase_base_y = None, None
-
     def record_new_node(self):
+        # Maybe we're trying to record the first node? do that instead!
+        if isinstance(self.map, type(None)) and not self.load_existing:
+            # no map supplied, we must have skipped record_first_node?
+            # self.map = map_diff(*map_capture(), is_start=True)
+            # self.prev_node =
+            self.record_first_node()
+            return
+
+        assert not isinstance(self.map, type(None)), "You have to have a base static map to work from, by calling record_first_node or saving static_data/area_name.png"
+
         diff = map_diff(*map_capture(), threshold=.15)
+
+        # Debug: show diff
+        # cv2.imshow("map diff", diff)
+        # cv2.waitKey(0)
+
         self.map, x, y, self.last_base_x, self.lase_base_y = map_merge_features(self.map, diff)
 
         # TODO: sanity check, is this node too close to a previous one? may min distance is like 20 pixels?
@@ -54,7 +124,8 @@ class AutoRecorder:
 
         # print(self.start_node)
 
-        # todo: draw the nodes? funsies
+
+
         map_copy = self.map.copy()
 
         # lighten map color so easier to see debug shit
@@ -84,53 +155,57 @@ class AutoRecorder:
 
                 cv2.line(map_copy, (x, y), (conn_new_x, conn_new_y), (0x00, 0xff, 0x00))
 
+        # Dump the static map, TODO: make this optional? don't need to do this after a while?
+        cv2.imwrite(self._get_area_level_png_path(), self.map)
 
+        # Dump the node data to json
         node_dict_data = []
         for node in self.nodes.values():
             node_data = node.to_dict()
             print(f"Adding node_data: {node_data}")
             node_dict_data.append(node_data)
 
-        with open("areas/static_data/harrogath.json", "w") as f:
-            f.write(json.dumps(node_dict_data, cls=NpEncoder))
+        with open(self._get_area_level_json_path(), "w") as f:
+            f.write(json.dumps(node_dict_data, cls=NpEncoder, indent=4))
 
         cv2.imshow("map with nodes", map_copy)
         cv2.waitKey(0)
 
 
-
-
-
-
-
-
-
-
-
-        # TODO: OUTPUT JSON?!
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
-    # cv2.imshow("asfd", np.array([[(255, 255, 255)]]))
-    # cv2.waitKey(0)
 
-    recorder = AutoRecorder()
+    # TODO: Make the first capture not automatic? Either auto-first node or you can select a node to extend
+
+    import tkinter as tk
+    from tkinter import messagebox, simpledialog, Entry, END
+
+
+    # Have to do this to start Tk
+    tk_root = tk.Tk()
+    tk_root.overrideredirect(1)
+    tk_root.withdraw()
+
+    kwargs = {
+        "load_existing": messagebox.askokcancel("Overwrite", "Load existing area? (if no, you may overwrite something!)"),
+        "area_name": simpledialog.askstring(title="Area name?", prompt="What's the AreaLevel you're working on?", initialvalue="Harrogath")
+    }
+
+    if kwargs["load_existing"]:
+        prev_node_coords = simpledialog.askstring(
+            title="Area name?",
+            prompt="Enter 'x, y' for the node would you like to add to. Ie '10_000, 10_000' to start from the original "
+                   "start (underscores deleted before processing)",
+            initialvalue="10_000,10_000"
+        )
+        prev_x, prev_y = prev_node_coords.replace("_", "").replace(" ", "").split(",")  # tuple (x, y)
+        kwargs["prev_node"] = (int(prev_x), int(prev_y))
+
+    recorder = AutoRecorder(**kwargs)
 
     keyboard.add_hotkey("scroll lock", recorder.record_new_node)
     keyboard.add_hotkey("pause break", recorder.finish)
+
+    # TODO: Select some particular node to start connecting from?
 
     # wait forever
     while True:

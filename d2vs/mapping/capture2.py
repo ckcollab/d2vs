@@ -149,7 +149,7 @@ def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True
             color = (0, 255, 0)  # green
 
         # I don't know why I have to offset the center x/y, but if I don't it is .. offset!
-        cv2.circle(diffed, (center_x + 4, center_y - 4), 2, color, -1)
+        cv2.circle(diffed, (center_x + 8, center_y - 8), 2, color, -1)
 
     # Debug showing diff post circles
     # cv2.imshow('diffed', diffed)

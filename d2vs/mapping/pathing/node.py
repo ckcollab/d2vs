@@ -60,6 +60,9 @@ class Node:
         self.is_start = is_start
         self.is_end = is_end
 
+    def __str__(self):
+        return f"{self.x}, {self.y}"
+
     def to_dict(self):
         """for json serialization"""
         return {
