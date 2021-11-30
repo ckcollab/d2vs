@@ -24,9 +24,8 @@ class OCRTestCases(TestCase):
             assert item_type == expected_item_type
 
     def assert_readings_match_expected(self, readings, expected):
-        text = "\n".join([line for _, line, _ in readings])
-        print(text)
-        print(text)
-        assert text == expected
-        # for _, text, _ in readings:
-        #     buffer +=
+        lines_read = [line for _, line, _ in readings]
+        lines_expected = expected.split("\n")
+
+        for read, expected in zip(lines_read, lines_expected):
+            assert read == expected
