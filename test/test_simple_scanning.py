@@ -2,10 +2,7 @@ from .base import OCRTestCases
 from d2vs.ocr import OCR
 
 
-class SimpleScanningTestcases(OCRTestCases):
-
-    def setUp(self):
-        self.ocr = OCR()
+class SimpleScanningTestCases(OCRTestCases):
 
     def test_scanning_simple_works(self):
         self._check_scan("test/test_data/simple/586_gold.png", "586 Gold", "Normal")
