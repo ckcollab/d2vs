@@ -59,3 +59,7 @@ class ItemDefinitionTestCases(OCRTestCases):
                 Tal Rasha's Fine-Spun Cloth
             """)
         )
+
+    def test_reading_item_definitions_with_low_scaling(self):
+        # check definitions but this time with much lower scaling
+        assert False
