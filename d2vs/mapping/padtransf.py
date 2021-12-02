@@ -16,6 +16,8 @@ behind the functions: https://stackoverflow.com/a/44459869/5087436
 import cv2
 import numpy as np
 
+from d2vs.utils import ImageMergeException
+
 
 def warpPerspectivePadded(
         src, dst, M,
@@ -187,6 +189,9 @@ def warpAffinePadded(src, dst, M, flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_
         anchor_y = -min_y
     shifted_transf = M + [[0, 0, anchor_x], [0, 0, anchor_y]]
 
+    # if np.any(shifted_transf >= 4) or np.any(shifted_transf <= -4):
+    #     raise ImageMergeException("We way outta da bounds!")
+
     # create padded destination image
     dst_h, dst_w = dst.shape[:2]
 
@@ -196,6 +201,35 @@ def warpAffinePadded(src, dst, M, flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_
     dst_padded = cv2.copyMakeBorder(dst, *pad_widths, borderType=borderMode, value=borderValue)
 
     dst_pad_h, dst_pad_w = dst_padded.shape[:2]
+
+
+
+
+
+
+
+
+
+
+
+    # TODO: check old width vs new width, are we increasing > 10%?
+
+
+
+
+
+
+
+
+
+
+
+    print("are we doing a huge shift here?")
+    print(shifted_transf)
+    print("anchors:", anchor_x, anchor_y)
+    print("pad h,w:", dst_pad_h, dst_pad_w)
+
+
     src_warped = cv2.warpAffine(src, shifted_transf, (dst_pad_w, dst_pad_h), flags=flags, borderMode=borderMode, borderValue=borderValue)
 
     return dst_padded, src_warped

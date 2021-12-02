@@ -8,8 +8,9 @@ import numpy as np
 from cv2 import cv2
 
 from d2vs.mapping.capture2 import map_diff, map_capture, map_merge_features
+from d2vs.mapping.padtransf import ImageMergeException
 from d2vs.mapping.pathing import Node
-from d2vs.utils import NpEncoder
+from d2vs.utils import NpEncoder, windows_say
 
 
 class AutoRecorder:
@@ -84,6 +85,7 @@ class AutoRecorder:
             is_start=True,
         )
         self.nodes[(self.start_node.x, self.start_node.y)] = self.start_node
+        self.last_base_x, self.lase_base_y = (0, 0)
         self.prev_node = self.start_node
 
     def record_new_node(self):
@@ -103,19 +105,24 @@ class AutoRecorder:
         # cv2.imshow("map diff", diff)
         # cv2.waitKey(0)
 
-        self.map, x, y, self.last_base_x, self.lase_base_y = map_merge_features(self.map, diff)
+        try:
+            self.map, x, y, self.last_base_x, self.lase_base_y = map_merge_features(self.map, diff)
 
-        # TODO: sanity check, is this node too close to a previous one? may min distance is like 20 pixels?
+            # TODO: sanity check, is this node too close to a previous one? may min distance is like 20 pixels?
 
-        new_node = Node(x, y)
+            new_node = Node(x, y)
 
-        self.nodes[(new_node.x, new_node.y)] = new_node
+            self.nodes[(new_node.x, new_node.y)] = new_node
 
-        # TODO: also connect all nodes within ??? range?
-        self.prev_node.add_connection(new_node)  # connect previous to new
-        self.prev_node = new_node  # new is now the old!
+            # TODO: also connect all nodes within ??? range?
+            self.prev_node.add_connection(new_node)  # connect previous to new
+            self.prev_node = new_node  # new is now the old!
 
-        print(x, y)
+            print(x, y)
+        except ImageMergeException as e:
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            print(e)
+            windows_say("Failed")
 
     def finish(self):
         # node = self.start_node
@@ -126,6 +133,27 @@ class AutoRecorder:
 
 
 
+
+
+        # Dump the static map, TODO: make this optional? don't need to do this after a while?
+        cv2.imwrite(self._get_area_level_png_path(), self.map)
+
+        # Dump the node data to json
+        self.dump_nodes()
+
+        self.view_map()
+
+    def dump_nodes(self):
+        node_dict_data = []
+        for node in self.nodes.values():
+            node_data = node.to_dict()
+            print(f"Adding node_data: {node_data}")
+            node_dict_data.append(node_data)
+
+        with open(self._get_area_level_json_path(), "w") as f:
+            f.write(json.dumps(node_dict_data, cls=NpEncoder, indent=4))
+
+    def draw_map_with_nodes(self):
         map_copy = self.map.copy()
 
         # lighten map color so easier to see debug shit
@@ -140,36 +168,29 @@ class AutoRecorder:
             y = node.y + self.lase_base_y - 10_000
             print(f"Drawing node from ({node.x}, {node.y}) to ({x}, {y})")
             FONT_HERSHEY_COMPLEX_SMALL = 5
-            cv2.putText(map_copy, f"{node.x}, {node.y}", (x - 20, y - 10), FONT_HERSHEY_COMPLEX_SMALL, .66, (0x00, 0xff, 0x00), 1)
+            cv2.putText(map_copy, f"{node.x}, {node.y}", (x - 20, y - 10), FONT_HERSHEY_COMPLEX_SMALL, .66,
+                        (0x00, 0xff, 0x00), 1)
 
             if node.is_start:
                 color = (0x00, 0x00, 0xff)
             else:
                 color = (0x00, 0xff, 0x00)
 
-            cv2.circle(map_copy, (x, y), 3, color, -1)
+            # TODO: add these offsets to the actual x / y coords? are they accurate enough?!
+            cv2.circle(map_copy, (x + 5, y), 3, color, -1)
 
             for conn in node.get_connections():
                 conn_new_x = conn.x + self.last_base_x - 10_000
                 conn_new_y = conn.y + self.lase_base_y - 10_000
 
-                cv2.line(map_copy, (x, y), (conn_new_x, conn_new_y), (0x00, 0xff, 0x00))
+                cv2.line(map_copy, (x + 5, y), (conn_new_x + 5, conn_new_y), (0x00, 0xff, 0x00))
+        return map_copy
 
-        # Dump the static map, TODO: make this optional? don't need to do this after a while?
-        cv2.imwrite(self._get_area_level_png_path(), self.map)
-
-        # Dump the node data to json
-        node_dict_data = []
-        for node in self.nodes.values():
-            node_data = node.to_dict()
-            print(f"Adding node_data: {node_data}")
-            node_dict_data.append(node_data)
-
-        with open(self._get_area_level_json_path(), "w") as f:
-            f.write(json.dumps(node_dict_data, cls=NpEncoder, indent=4))
-
-        cv2.imshow("map with nodes", map_copy)
+    def view_map(self):
+        map = self.draw_map_with_nodes()
+        cv2.imshow("map with nodes", map)
         cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
@@ -186,8 +207,10 @@ if __name__ == "__main__":
     tk_root.withdraw()
 
     kwargs = {
-        "load_existing": messagebox.askokcancel("Overwrite", "Load existing area? (if no, you may overwrite something!)"),
-        "area_name": simpledialog.askstring(title="Area name?", prompt="What's the AreaLevel you're working on?", initialvalue="Harrogath")
+        # "load_existing": messagebox.askokcancel("Overwrite", "Load existing area? (if no, you may overwrite something!)"),
+        # "area_name": simpledialog.askstring(title="Area name?", prompt="What's the AreaLevel you're working on?", initialvalue="Harrogath")
+        "load_existing": False,
+        "area_name": "Harrogath",
     }
 
     if kwargs["load_existing"]:
@@ -203,6 +226,7 @@ if __name__ == "__main__":
     recorder = AutoRecorder(**kwargs)
 
     keyboard.add_hotkey("scroll lock", recorder.record_new_node)
+    keyboard.add_hotkey("f11", recorder.view_map)
     keyboard.add_hotkey("pause break", recorder.finish)
 
     # TODO: Select some particular node to start connecting from?

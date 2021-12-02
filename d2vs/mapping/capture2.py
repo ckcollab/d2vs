@@ -1,9 +1,3 @@
-"""
-TODO:
-  [ ] hsv capture of merc/player to filter it out
-  [ ] stitch images together using affine
-  [ ] get rid of moving things by adding a second diff
-"""
 import os
 from glob import glob
 from typing import NamedTuple
@@ -14,6 +8,8 @@ import mss
 import mss.tools
 
 from time import sleep, time
+
+from d2vs.utils import ImageMergeException
 from padtransf import warpPerspectivePadded, warpAffinePadded
 
 import numpy as np
@@ -89,9 +85,29 @@ def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True
 
     # images displaying the map, clean up some things from this display so it's less cluttered
     original_during_1 = during_1.copy()
+
+
     during_1 = _mask_image(during_1, (0x20, 0x84, 0xF6))  # player marker
     during_1 = _mask_image(during_1, (0x44, 0x70, 0x74))  # merc marker
     during_1 = _mask_image(during_1, (0xff, 0xff, 0xff))  # npc marker
+
+
+
+
+    # TODO: HSV it up..
+    #   1. White (i.e. npc) is HSV (0, 1, 75%) through (0, 0, 100)
+    #   2. Blue on minimap (i.e. you) is HSV (210, 85%, 85%) through (215, 87%, 99%)
+    #   3. Greenish on minimap (i.e. merc) is HSV (180, 40%, 40%) through (190, 42%, 42%)
+
+
+
+
+
+
+
+
+
+
 
     during_1 = cv2.cvtColor(during_1, cv2.COLOR_BGR2GRAY)
     # during_2 = cv2.cvtColor(during_2, cv2.COLOR_BGR2GRAY)
@@ -246,6 +262,8 @@ def map_merge_features(diff_1, diff_2):
     H, mask = cv2.estimateAffine2D(points2, points1)
     # H, mask = cv2.estimateAffinePartial2D(points1, points2)  # ??? don't think we need this? doesn't seem to work
     original_with_padding, new_with_padding = warpAffinePadded(diff_2, diff_1, H, flags=cv2.INTER_NEAREST)
+    # original_with_padding, new_with_padding = warpAffinePadded(diff_2, diff_1, H, flags=cv2.INTER_LANCZOS4)  # slow ?
+    # original_with_padding, new_with_padding = warpAffinePadded(diff_2, diff_1, H, flags=cv2.INTER_CUBIC)
 
     # Debug showing padding results
     # cv2.imshow("Result", new_with_padding)
@@ -263,7 +281,20 @@ def map_merge_features(diff_1, diff_2):
     # original_with_padding[np.all(new_with_padding == [0, 0, 0], axis=-1)] = [127, 127, 127]  # anything black in new image -> gray, prepped to be removed if not repeated
 
     # Merge original with new
-    map = cv2.bitwise_or(original_with_padding, new_with_padding)
+    # map = cv2.bitwise_or(original_with_padding, new_with_padding)
+    map = cv2.bitwise_or(new_with_padding, original_with_padding)  # TODO: trying to swap ordering??
+    # map = cv2.bitwise_or(new_with_padding, original_with_padding, mask=new_with_padding[np.all(new_with_padding == [0, 0, 0])])
+    # map = cv2.bitwise_and(new_with_padding, original_with_padding, mask=excluding areas in padding or something?)
+
+
+
+
+    # TODO: TESTING
+    # map = cv2.fastNlMeansDenoising(map)
+    # TODO: TESTING
+
+
+
 
     # Re-add red mask so it's super clear
     map[red_starting_point_mask] = [0, 0, 255]
@@ -286,14 +317,17 @@ def map_merge_features(diff_1, diff_2):
     # print(green_current_point_mask)
     # print(coordinates)
 
-
+    # Look in original image for red coordinate
     red_coords = np.where(np.all(map == [0, 0, 255], axis=-1))
     red_coords = np.transpose(red_coords)  # faster than 'zip' but does same thing ???
     red_y, red_x = red_coords[0]
 
-    green_coords = np.where(np.all(map == [0, 255, 0], axis=-1))
-    green_coords = np.transpose(green_coords)  # faster than 'zip' but does same thing ???
-    green_y, green_x = green_coords[0]
+    try:
+        green_coords = np.where(np.all(new_with_padding == [0, 255, 0], axis=-1))
+        green_coords = np.transpose(green_coords)  # faster than 'zip' but does same thing ???
+        green_y, green_x = green_coords[0]
+    except IndexError:
+        raise ImageMergeException("Could not find green marker indicating current position") from None
 
     # red is start at 10_000, 10_000 so base it off that...
     current_x, current_y = 10_000 + green_x - red_x, 10_000 + green_y - red_y
