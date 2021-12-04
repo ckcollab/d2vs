@@ -10,7 +10,7 @@ import mss.tools
 from time import sleep, time
 
 from d2vs.utils import ImageMergeException
-from padtransf import warpPerspectivePadded, warpAffinePadded
+from padtransf import warpAffinePadded
 
 import numpy as np
 from cv2 import cv2
@@ -124,6 +124,8 @@ def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True
         cv2.inRange(during_1, (105, int(.85 * 255), int(.8 * 255)), (110, int(.90 * 255), int(1 * 255))),  # blue, current player marker
         # (185,41,45) .. (183,37,41) .. (184,40,39)
         cv2.inRange(during_1, (90, int(.35 * 255), int(.35 * 255)), (95, int(.45 * 255), int(.50 * 255))),  # green mercs
+
+        # TODO: Yellow warps ??? Red portal ?? remove it, but re-add it colored as warp?
     ]
 
 
@@ -362,9 +364,10 @@ def map_merge_features(diff_1, diff_2):
     # print(coordinates)
 
     # Look in original image for red coordinate
-    red_coords = np.where(np.all(map == [0, 0, 255], axis=-1))
-    red_coords = np.transpose(red_coords)  # faster than 'zip' but does same thing ???
-    red_y, red_x = red_coords[0]
+    # red_coords = np.where(np.all(map == [0, 0, 255], axis=-1))
+    # red_coords = np.transpose(red_coords)  # faster than 'zip' but does same thing ???
+    # red_y, red_x = red_coords[0]
+    red_x, red_y = map_get_coordinates(map, [0, 0, 255])
 
     try:
         green_coords = np.where(np.all(new_with_padding == [0, 255, 0], axis=-1))
@@ -385,6 +388,13 @@ def map_merge_features(diff_1, diff_2):
     # cv2.imshow("Result", map)
     # cv2.waitKey(0)
     return map, current_x, current_y, base_x, base_y
+
+
+def map_get_coordinates(map, color):
+    coords = np.where(np.all(map == color, axis=-1))
+    coords = np.transpose(coords)  # faster than 'zip' but does same thing ???
+    y, x = coords[0]
+    return x, y
 
 
 def map_process():

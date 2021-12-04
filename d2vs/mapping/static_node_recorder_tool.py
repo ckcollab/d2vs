@@ -7,7 +7,7 @@ from time import sleep
 import numpy as np
 from cv2 import cv2
 
-from d2vs.mapping.capture2 import map_diff, map_capture, map_merge_features
+from d2vs.mapping.capture2 import map_diff, map_capture, map_merge_features, map_get_coordinates
 from d2vs.mapping.padtransf import ImageMergeException
 from d2vs.mapping.pathing import Node
 from d2vs.utils import NpEncoder, windows_say
@@ -73,10 +73,13 @@ class AutoRecorder:
             self.prev_node = None
 
         # Location of red dot (start) on map
-        self.last_base_x, self.lase_base_y = None, None
+        self.last_base_x, self.last_base_y = None, None
 
     def _get_area_level_png_path(self):
         return f"areas/static_data/{self.area_name}.png"
+
+    def _get_area_level_debug_png_path(self):
+        return f"areas/static_data/{self.area_name}_debug.png"
 
     def _get_area_level_json_path(self):
         return f"areas/static_data/{self.area_name}.json"
@@ -94,7 +97,7 @@ class AutoRecorder:
             is_start=True,
         )
         self.nodes[(self.start_node.x, self.start_node.y)] = self.start_node
-        self.last_base_x, self.lase_base_y = (0, 0)
+        self.last_base_x, self.last_base_y = (0, 0)
         self.prev_node = self.start_node
 
     def record_new_node(self):
@@ -108,14 +111,14 @@ class AutoRecorder:
 
         assert not isinstance(self.map, type(None)), "You have to have a base static map to work from, by calling record_first_node or saving static_data/area_name.png"
 
-        diff = map_diff(*map_capture(), threshold=.15)
+        diff = map_diff(*map_capture())
 
         # Debug: show diff
         # cv2.imshow("map diff", diff)
         # cv2.waitKey(0)
 
         try:
-            new_map, x, y, self.last_base_x, self.lase_base_y = map_merge_features(self.map, diff)
+            new_map, x, y, self.last_base_x, self.last_base_y = map_merge_features(self.map, diff)
 
             if not self.load_existing:
                 self.map = new_map
@@ -175,10 +178,15 @@ class AutoRecorder:
         # Delete any old green markers for "current location"
         map_copy[np.all(map_copy == [0, 255, 0], axis=-1)] = [0, 0, 0]
 
+        # maybe we need to initialiez these if no merge has been done yet?
+        if not self.last_base_x:
+            self.last_base_x, self.last_base_y = map_get_coordinates(map_copy, [0, 0, 255])
+            print(self.last_base_x, self.last_base_y)
+
         for node in self.nodes.values():
             # Go back from 10_000, 10_000 based coordinate system to 0, 0 based for drawing this on our diff
             x = node.x + self.last_base_x - 10_000
-            y = node.y + self.lase_base_y - 10_000
+            y = node.y + self.last_base_y - 10_000
             print(f"Drawing node from ({node.x}, {node.y}) to ({x}, {y})")
             FONT_HERSHEY_COMPLEX_SMALL = 5
             cv2.putText(map_copy, f"{node.x}, {node.y}", (x - 20, y - 10), FONT_HERSHEY_COMPLEX_SMALL, .66,
@@ -194,9 +202,12 @@ class AutoRecorder:
 
             for conn in node.get_connections():
                 conn_new_x = conn.x + self.last_base_x - 10_000
-                conn_new_y = conn.y + self.lase_base_y - 10_000
+                conn_new_y = conn.y + self.last_base_y - 10_000
 
                 cv2.line(map_copy, (x, y), (conn_new_x, conn_new_y), (0x00, 0xff, 0x00))
+
+        cv2.imwrite(self._get_area_level_debug_png_path(), map_copy)
+
         return map_copy
 
     def view_map(self):
@@ -222,11 +233,12 @@ if __name__ == "__main__":
     kwargs = {
         # "load_existing": messagebox.askokcancel("Overwrite", "Load existing area? (if no, you may overwrite something!)"),
         # "area_name": simpledialog.askstring(title="Area name?", prompt="What's the AreaLevel you're working on?", initialvalue="Harrogath")
-        "load_existing": False,
+        # "load_existing": False,
 
-        # "load_existing": True,
+        "load_existing": True,
         "area_name": "Harrogath",
-        # "prev_node": (10_000, 10_000),
+        "prev_node": (10_000, 10_000),
+        # "prev_node": (9966, 10034),
     }
 
     # if kwargs["load_existing"]:
