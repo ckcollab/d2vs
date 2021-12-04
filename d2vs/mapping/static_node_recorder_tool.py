@@ -233,11 +233,11 @@ if __name__ == "__main__":
     kwargs = {
         # "load_existing": messagebox.askokcancel("Overwrite", "Load existing area? (if no, you may overwrite something!)"),
         # "area_name": simpledialog.askstring(title="Area name?", prompt="What's the AreaLevel you're working on?", initialvalue="Harrogath")
-        # "load_existing": False,
+        "load_existing": False,
 
-        "load_existing": True,
-        "area_name": "Harrogath",
-        "prev_node": (10_000, 10_000),
+        # "load_existing": True,
+        "area_name": "Catacombs_Level_2",
+        # "prev_node": (10_000, 10_000),
         # "prev_node": (9966, 10034),
     }
 

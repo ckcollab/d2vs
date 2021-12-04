@@ -147,12 +147,14 @@ def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True
 
     # Get diff of original pre-map image vs both map snapshots, combine the artifacts from both snapshots
     absdiff_1 = cv2.absdiff(pre, during_1)
-    _, thresholded_1 = cv2.threshold(absdiff_1, int(threshold * 255), 255, cv2.THRESH_BINARY)
+    # _, thresholded_1 = cv2.threshold(absdiff_1, int(threshold * 255), 255, cv2.THRESH_BINARY)
+
     # absdiff_2 = cv2.absdiff(pre, during_2)
     # _, thresholded_2 = cv2.threshold(absdiff_2, int(threshold * 255), 255, cv2.THRESH_BINARY)
 
     # diffed = cv2.bitwise_and(thresholded_1, thresholded_2)
-    diffed = thresholded_1
+    # diffed = thresholded_1
+    diffed = absdiff_1
 
     # earlier we masked some things from the minimap, remove them now post-diff
     for mask_locations in masks_to_remove:
