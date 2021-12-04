@@ -76,6 +76,11 @@ print(item_type)
 
   _an example map reading from d2vs of black marsh_
   
+![image](https://user-images.githubusercontent.com/2185159/144722467-5fdc4eb4-8a1a-4c96-b280-b818a6c24d27.png)
+
+
+  _nodes for the static map Harrogath_
+  
 </div>
 
 # development
