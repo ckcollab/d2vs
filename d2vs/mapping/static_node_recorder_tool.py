@@ -31,6 +31,9 @@ class AutoRecorder:
         # Node the level starts from/is relative to .. the (10_000, 10_000) coordinate Node
         self.start_node = None
 
+        # We make map in record_first_node, or load existing map
+        self.map = None
+
         # Holds our nodes, keys are tuple of (x, y) value is Node
         self.nodes = {}
         if load_existing:
@@ -54,8 +57,7 @@ class AutoRecorder:
                 for c_x, c_y in n["connections"]:
                     self.nodes[(n["x"], n["y"])].add_connection(self.nodes[(c_x, c_y)])
 
-        # We make map in record_first_node
-        self.map = None
+            self.map = cv2.imread(self._get_area_level_png_path())
 
         # Points to last created node
         if prev_node:
@@ -106,7 +108,10 @@ class AutoRecorder:
         # cv2.waitKey(0)
 
         try:
-            self.map, x, y, self.last_base_x, self.lase_base_y = map_merge_features(self.map, diff)
+            new_map, x, y, self.last_base_x, self.lase_base_y = map_merge_features(self.map, diff)
+
+            if not self.load_existing:
+                self.map = new_map
 
             # TODO: sanity check, is this node too close to a previous one? may min distance is like 20 pixels?
 
@@ -136,7 +141,8 @@ class AutoRecorder:
 
 
         # Dump the static map, TODO: make this optional? don't need to do this after a while?
-        cv2.imwrite(self._get_area_level_png_path(), self.map)
+        if not self.load_existing:
+            cv2.imwrite(self._get_area_level_png_path(), self.map)
 
         # Dump the node data to json
         self.dump_nodes()
@@ -176,14 +182,14 @@ class AutoRecorder:
             else:
                 color = (0x00, 0xff, 0x00)
 
-            # TODO: add these offsets to the actual x / y coords? are they accurate enough?!
-            cv2.circle(map_copy, (x + 5, y), 3, color, -1)
+            # NOTE: this is 3px radius, red circle marking start location is only 2px .. shouldn't matter much ..
+            cv2.circle(map_copy, (x, y), 3, color, -1)
 
             for conn in node.get_connections():
                 conn_new_x = conn.x + self.last_base_x - 10_000
                 conn_new_y = conn.y + self.lase_base_y - 10_000
 
-                cv2.line(map_copy, (x + 5, y), (conn_new_x + 5, conn_new_y), (0x00, 0xff, 0x00))
+                cv2.line(map_copy, (x, y), (conn_new_x, conn_new_y), (0x00, 0xff, 0x00))
         return map_copy
 
     def view_map(self):
@@ -209,19 +215,22 @@ if __name__ == "__main__":
     kwargs = {
         # "load_existing": messagebox.askokcancel("Overwrite", "Load existing area? (if no, you may overwrite something!)"),
         # "area_name": simpledialog.askstring(title="Area name?", prompt="What's the AreaLevel you're working on?", initialvalue="Harrogath")
-        "load_existing": False,
+        # "load_existing": False,
+
+        "load_existing": True,
         "area_name": "Harrogath",
+        "prev_node": (10_000, 10_000),
     }
 
-    if kwargs["load_existing"]:
-        prev_node_coords = simpledialog.askstring(
-            title="Area name?",
-            prompt="Enter 'x, y' for the node would you like to add to. Ie '10_000, 10_000' to start from the original "
-                   "start (underscores deleted before processing)",
-            initialvalue="10_000,10_000"
-        )
-        prev_x, prev_y = prev_node_coords.replace("_", "").replace(" ", "").split(",")  # tuple (x, y)
-        kwargs["prev_node"] = (int(prev_x), int(prev_y))
+    # if kwargs["load_existing"]:
+    #     prev_node_coords = simpledialog.askstring(
+    #         title="Area name?",
+    #         prompt="Enter 'x, y' for the node would you like to add to. Ie '10_000, 10_000' to start from the original "
+    #                "start (underscores deleted before processing)",
+    #         initialvalue="10_000,10_000"
+    #     )
+    #     prev_x, prev_y = prev_node_coords.replace("_", "").replace(" ", "").split(",")  # tuple (x, y)
+    #     kwargs["prev_node"] = (int(prev_x), int(prev_y))
 
     recorder = AutoRecorder(**kwargs)
 

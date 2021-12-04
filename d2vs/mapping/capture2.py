@@ -165,7 +165,7 @@ def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True
             color = (0, 255, 0)  # green
 
         # I don't know why I have to offset the center x/y, but if I don't it is .. offset!
-        cv2.circle(diffed, (center_x + 8, center_y - 8), 2, color, -1)
+        cv2.circle(diffed, (center_x, center_y), 2, color, -1)
 
     # Debug showing diff post circles
     # cv2.imshow('diffed', diffed)
@@ -186,7 +186,7 @@ def map_get_features(diff):
 
     # ORB style?
     # orb = cv2.ORB_create()
-    orb = cv2.ORB_create(nfeatures=5000, edgeThreshold=0, scoreType=cv2.ORB_FAST_SCORE)
+    orb = cv2.ORB_create(nfeatures=7500, edgeThreshold=0, scoreType=cv2.ORB_FAST_SCORE)
     # orb = cv2.ORB_create(nfeatures=1500, edgeThreshold=0, scoreType=cv2.ORB_FAST_SCORE)
     keypoints, descriptors = orb.detectAndCompute(diff, None)
     # features = cv2.drawKeypoints(diff, keypoints, None, color=(255, 0, 0))
@@ -263,7 +263,8 @@ def map_merge_features(diff_1, diff_2):
     # H, mask = cv2.estimateAffinePartial2D(points1, points2)  # ??? don't think we need this? doesn't seem to work
     original_with_padding, new_with_padding = warpAffinePadded(diff_2, diff_1, H, flags=cv2.INTER_NEAREST)
     # original_with_padding, new_with_padding = warpAffinePadded(diff_2, diff_1, H, flags=cv2.INTER_LANCZOS4)  # slow ?
-    # original_with_padding, new_with_padding = warpAffinePadded(diff_2, diff_1, H, flags=cv2.INTER_CUBIC)
+    # original_with_padding, new_with_padding = warpAffinePadded(diff_2, diff_1, H, flags=cv2.INTER_CUBIC)  # worked OK?
+    # original_with_padding, new_with_padding = warpAffinePadded(diff_2, diff_1, H, flags=cv2.INTER_NEAREST_EXACT)
 
     # Debug showing padding results
     # cv2.imshow("Result", new_with_padding)
