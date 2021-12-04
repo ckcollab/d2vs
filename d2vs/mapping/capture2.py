@@ -56,25 +56,40 @@ def map_capture():
         return pre, during_1, during_2
 
 
-def _mask_image(img, color, background="None"):
-    range_start, range_end = _color_rgb_to_bgr_range(color)
-    img_mask = cv2.inRange(img, range_start, range_end)
+# def _mask_image(img, color, background="None"):
+#     range_start, range_end = _color_rgb_to_bgr_range(color)
+#     img_mask = cv2.inRange(img, range_start, range_end)
+#
+#     # expand what we found to cover the whole thing, make the whole blur part of the mask via threshold
+#     img_mask = cv2.blur(img_mask, (4, 4))
+#     _, img_mask = cv2.threshold(img_mask, int(0.1 * 255), 255, cv2.THRESH_BINARY)
+#
+#     if background == "None":
+#         return cv2.bitwise_and(img, img, mask=255 - img_mask)
+#     else:
+#         return cv2.bitwise_and(img, img, mask=255 - img_mask)
+#
+#
+# def _color_rgb_to_bgr_range(color, range=1.0):
+#     r, g, b = color
+#     offset = int(range / 2)
+#     # return (b - offset, g - offset, r - offset), (b + offset, g + offset, r + offset)
+#     return (b - (12 * range), g - (8 * range), r - (8 * range)), (b + (12 * range), g + (8 * range), r + (8 * range))
 
-    # expand what we found to cover the whole thing, make the whole blur part of the mask via threshold
-    img_mask = cv2.blur(img_mask, (4, 4))
-    _, img_mask = cv2.threshold(img_mask, int(0.1 * 255), 255, cv2.THRESH_BINARY)
 
-    if background == "None":
-        return cv2.bitwise_and(img, img, mask=255 - img_mask)
-    else:
-        return cv2.bitwise_and(img, img, mask=255 - img_mask)
-
-
-def _color_rgb_to_bgr_range(color, range=1.0):
-    r, g, b = color
-    offset = int(range / 2)
-    # return (b - offset, g - offset, r - offset), (b + offset, g + offset, r + offset)
-    return (b - (12 * range), g - (8 * range), r - (8 * range)), (b + (12 * range), g + (8 * range), r + (8 * range))
+# def _remove_range(img, range_start, range_end):
+#     img_mask = cv2.inRange(img, range_start, range_end)
+#
+#     # Debug showing mask
+#     # cv2.imshow('mask', img_mask)
+#     # cv2.waitKey(0)
+#     # cv2.destroyAllWindows()
+#
+#     # expand what we found to cover the whole thing, make the whole blur part of the mask via threshold
+#     img_mask = cv2.blur(img_mask, (4, 4))
+#     _, img_mask = cv2.threshold(img_mask, int(0.1 * 255), 255, cv2.THRESH_BINARY)
+#
+#     return cv2.bitwise_and(img, img, mask=255 - img_mask)
 
 
 def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True, threshold=0.11):
@@ -87,9 +102,10 @@ def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True
     original_during_1 = during_1.copy()
 
 
-    during_1 = _mask_image(during_1, (0x20, 0x84, 0xF6))  # player marker
-    during_1 = _mask_image(during_1, (0x44, 0x70, 0x74))  # merc marker
-    during_1 = _mask_image(during_1, (0xff, 0xff, 0xff))  # npc marker
+    # during_1 = _mask_image(during_1, (0x20, 0x84, 0xF6))  # player marker
+    # during_1 = _mask_image(during_1, (0x44, 0x70, 0x74))  # merc marker
+    # during_1 = _mask_image(during_1, (0xff, 0xff, 0xff))  # npc marker
+
 
 
 
@@ -98,6 +114,23 @@ def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True
     #   1. White (i.e. npc) is HSV (0, 1, 75%) through (0, 0, 100)
     #   2. Blue on minimap (i.e. you) is HSV (210, 85%, 85%) through (215, 87%, 99%)
     #   3. Greenish on minimap (i.e. merc) is HSV (180, 40%, 40%) through (190, 42%, 42%)
+    during_1 = cv2.cvtColor(during_1, cv2.COLOR_BGR2HSV)
+    # during_1 = _remove_range(during_1, (0, 0, .75 * 255), (0, 25, 255))  # white npcs
+    # during_1 = _remove_range(during_1, (210, .85 * 255, .85 * 255), (215, .90 * 255, 255))  # blue, current player marker
+    # during_1 = _remove_range(during_1, (180, .4 * 255, .4 * 255), (190, .42 * 255, .42 * 255))  # green mercs
+    masks_to_remove = [
+        cv2.inRange(during_1, (0, 0, .75 * 255), (0, 25, 255)),  # white npcs
+        # cv2.inRange(during_1, (200, .80 * 255, .85 * 255), (215, .95 * 255, 255)),  # blue, current player marker
+        cv2.inRange(during_1, (105, int(.85 * 255), int(.8 * 255)), (110, int(.90 * 255), int(1 * 255))),  # blue, current player marker
+        # (185,41,45) .. (183,37,41) .. (184,40,39)
+        cv2.inRange(during_1, (90, int(.35 * 255), int(.35 * 255)), (95, int(.45 * 255), int(.50 * 255))),  # green mercs
+    ]
+
+
+    # Debug showing masked things being removed
+    # cv2.imshow('mask', during_1)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
 
 
@@ -106,9 +139,7 @@ def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True
 
 
 
-
-
-
+    during_1 = cv2.cvtColor(during_1, cv2.COLOR_HSV2BGR)  # convert it to bgr which lets us convert to gray..
     during_1 = cv2.cvtColor(during_1, cv2.COLOR_BGR2GRAY)
     # during_2 = cv2.cvtColor(during_2, cv2.COLOR_BGR2GRAY)
 
@@ -121,6 +152,13 @@ def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True
     # diffed = cv2.bitwise_and(thresholded_1, thresholded_2)
     diffed = thresholded_1
 
+    # earlier we masked some things from the minimap, remove them now post-diff
+    for mask_locations in masks_to_remove:
+        img_mask = cv2.blur(mask_locations, (2, 2))
+        _, img_mask = cv2.threshold(img_mask, int(0.1 * 255), 255, cv2.THRESH_BINARY)
+
+        diffed = cv2.bitwise_and(diffed, diffed, mask=255 - img_mask)
+
     # Debug showing diff before adding circles
     # cv2.imshow('absdiff_1', absdiff_1)
     # cv2.waitKey(0)
@@ -128,6 +166,7 @@ def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True
     # cv2.waitKey(0)
     # cv2.imshow('diffed', diffed)
     # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
 
 
@@ -146,17 +185,21 @@ def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True
 
 
 
-    # were there any warps here? highlight them!
-    # range_start, range_end = color_rgb_to_bgr_range((0xD9, 0x58, 0xEB))  # gets top of warp
-    # range_start, range_end = color_rgb_to_bgr_range((0xA2, 0x46, 0xEA))  # middle of warp
-    # range_start, range_end = color_rgb_to_bgr_range((0xB5, 0x4C, 0xEB))  # middle of warp
-    range_start, range_end = _color_rgb_to_bgr_range((0x8D, 0x3C, 0xB2), range=1.5)  # middle of warp
-    # range_start, range_end = (0xEB - 15, 0x58 - 15, 0xD9 - 15), (0xEA + 15, 0x46 + 15, 0xA2 + 15)
-    warp_mask = cv2.inRange(original_during_1, range_start, range_end)
-    warp_mask = cv2.blur(warp_mask, (5, 5))
-    _, warp_mask = cv2.threshold(warp_mask, int(0.1 * 255), 255, cv2.THRESH_BINARY)
+    # TODO: RE-DO WARP MASKS WITH HSV!
 
-    diffed[warp_mask > 0] = [0xD9, 0x58, 0xEB]  # Where ever there is a warp color it in with da purps
+
+
+    # # were there any warps here? highlight them!
+    # # range_start, range_end = color_rgb_to_bgr_range((0xD9, 0x58, 0xEB))  # gets top of warp
+    # # range_start, range_end = color_rgb_to_bgr_range((0xA2, 0x46, 0xEA))  # middle of warp
+    # # range_start, range_end = color_rgb_to_bgr_range((0xB5, 0x4C, 0xEB))  # middle of warp
+    # range_start, range_end = _color_rgb_to_bgr_range((0x8D, 0x3C, 0xB2), range=1.5)  # middle of warp
+    # # range_start, range_end = (0xEB - 15, 0x58 - 15, 0xD9 - 15), (0xEA + 15, 0x46 + 15, 0xA2 + 15)
+    # warp_mask = cv2.inRange(original_during_1, range_start, range_end)
+    # warp_mask = cv2.blur(warp_mask, (5, 5))
+    # _, warp_mask = cv2.threshold(warp_mask, int(0.1 * 255), 255, cv2.THRESH_BINARY)
+    #
+    # diffed[warp_mask > 0] = [0xD9, 0x58, 0xEB]  # Where ever there is a warp color it in with da purps
 
     if show_current_location:
         if is_start:
@@ -165,7 +208,7 @@ def map_diff(pre, during_1, during_2, is_start=False, show_current_location=True
             color = (0, 255, 0)  # green
 
         # I don't know why I have to offset the center x/y, but if I don't it is .. offset!
-        cv2.circle(diffed, (center_x, center_y), 2, color, -1)
+        cv2.circle(diffed, (center_x + 12, center_y - 12), 2, color, -1)
 
     # Debug showing diff post circles
     # cv2.imshow('diffed', diffed)

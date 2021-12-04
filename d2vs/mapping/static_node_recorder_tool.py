@@ -37,7 +37,10 @@ class AutoRecorder:
         # Holds our nodes, keys are tuple of (x, y) value is Node
         self.nodes = {}
         if load_existing:
-            node_data = json.loads(open(self._get_area_level_json_path(), "r").read())
+            try:
+                node_data = json.loads(open(self._get_area_level_json_path(), "r").read())
+            except FileNotFoundError:
+                node_data = {}
 
             # Loop over data once and make initial set of nodes
             for n in node_data:
@@ -57,7 +60,11 @@ class AutoRecorder:
                 for c_x, c_y in n["connections"]:
                     self.nodes[(n["x"], n["y"])].add_connection(self.nodes[(c_x, c_y)])
 
-            self.map = cv2.imread(self._get_area_level_png_path())
+            try:
+                self.map = cv2.imread(self._get_area_level_png_path())
+            except FileNotFoundError:
+                self.map = None
+
 
         # Points to last created node
         if prev_node:
@@ -215,11 +222,11 @@ if __name__ == "__main__":
     kwargs = {
         # "load_existing": messagebox.askokcancel("Overwrite", "Load existing area? (if no, you may overwrite something!)"),
         # "area_name": simpledialog.askstring(title="Area name?", prompt="What's the AreaLevel you're working on?", initialvalue="Harrogath")
-        # "load_existing": False,
+        "load_existing": False,
 
-        "load_existing": True,
+        # "load_existing": True,
         "area_name": "Harrogath",
-        "prev_node": (10_000, 10_000),
+        # "prev_node": (10_000, 10_000),
     }
 
     # if kwargs["load_existing"]:
