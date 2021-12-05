@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="d2vs",
-    version="0.0.2",
+    version="0.0.3",
     packages=["d2vs"],
     description="Save contacts from your terminal",
     long_description=open("README.md", "r").read(),
