@@ -1,0 +1,36 @@
+//	=====================================================================================================================
+//	=== RARE ============================================================================================================
+//	=====================================================================================================================
+
+//------ amulets ------
+
+[type] == amulet && [quality] == rare # [sorceressskills]+[necromancerskills]+[paladinskills] >= 1 && [maxhp] >= 35 && ([maxmana] >= 50 || [strength] >= 15 || [dexterity] >= 10)
+[type] == amulet && [quality] == rare # [sorceressskills]+[necromancerskills]+[paladinskills] >= 1 && [maxmana] >= 50 && ([maxhp] >= 35 || [strength] >= 15 || [dexterity] >= 10)
+[type] == amulet && [quality] == rare # [amazonskills]+[sorceressskills]+[necromancerskills]+[paladinskills]+[barbarianskills] >= 1 && [fireresist]+[lightresist]+[coldresist]+[poisonresist] >= 64 && ([maxhp]+[maxmana] >= 50 || [strength]+[dexterity] >= 15 || [fcr] == 10)
+[type] == amulet && [quality] == rare # [amazonskills]+[sorceressskills]+[necromancerskills]+[paladinskills]+[barbarianskills] == 2 && ([fireresist]+[lightresist]+[coldresist]+[poisonresist] >= 64 || [fcr] == 10 && [maxhp]+[maxmana] >= 50)
+
+[type] == amulet && [quality] == rare # [paladinskills] >= 1 && [fireresist]+[lightresist]+[coldresist]+[poisonresist] >= 64
+//[type] == amulet && [quality] <= rare # [barbarianskills] == 2 || [sorceressskills] == 2
+
+//------ rings ------
+
+[type] == ring && [quality] == rare # [fcr] == 10 && [maxhp] >= 25 && [fireresist]+[coldresist]+[lightresist] >= 25
+[type] == ring && [quality] == rare # [fcr] == 10 && ([coldresist] >= 20) + ([fireresist] >= 20) + ([lightresist] >= 20) >= 2
+[type] == ring && [quality] == rare # [fcr] == 10 && [strength]+[dexterity] >= 25
+[type] == ring && [quality] == rare # [fcr] == 10 && ([strength] >= 10 || [maxhp] >= 20 || [maxmana] >= 40) && ([coldresist] >= 20 || [fireresist] >= 20 || [lightresist] >= 20)
+//[type] == ring && [quality] == rare # [tohit] == 100 && ([maxhp] >= 25 || [maxmana] >= 50) && ([lifeleech] >= 5 || [manaleech] >= 5 || [strength] >= 15)
+[type] == ring && [quality] == rare # ([maxhp] >= 25 || [maxmana] >= 50) && [fireresist]+[coldresist]+[lightresist] >= 40 && [strength]+[dexterity] >= 15
+
+//------ belts ------
+
+//[type] == belt && [name] >= platedbelt && [quality] == rare # ([fhr] >= 24 || [strength] >= 10 || [maxhp] >= 45) && [maxhp] >= 30 && ([coldresist] >= 20) + ([fireresist] >= 20) + ([lightresist] >= 20) >= 2
+[type] == belt && [quality] == rare # ([coldmindam] > 0 || [coldmaxdam] > 0) && [strength] >= 20 && [maxhp] >= 50
+[name] == warbelt && [quality] == rare # [enhanceddefense] >= 90 && [strength] >= 20
+
+
+//------ armor ------
+
+[type] == armor && [quality] == rare # [fhr] == 24 && [maxhp] >= 30 && ([coldresist] >= 20) + ([fireresist] >= 20) + ([lightresist] >= 20) >= 2
+[name] == ornateplate && [quality] == rare # ([enhanceddefense] >= 90) + ([itemreqpercent] < 0) + ([maxhp] >= 30) + ([strength] >= 10) >= 3
+[name] == mageplate && [quality] == rare # [enhanceddefense] >= 60 && [maxhp] >= 30 && ([coldresist] >= 20) + ([fireresist] >= 20) + ([lightresist] >= 20) >= 2
+[type] == armor && [quality] == rare # [fireresist]+[coldresist]+[lightresist] >= 50 && [itemlightradius] == 2 // BANANA
