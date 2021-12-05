@@ -45,7 +45,7 @@ ocr = OCR()
 img = Image.open("586_gold.png")
 
 # Scan the image
-bounds, text, item_type = ocr.read(np.asarray(img, dtype='uint8'))
+bounds, text, item_type = ocr.read(img)
 
 # Print out the data for demo purposes
 top_left, top_right, bottom_right, bottom_left = bounds

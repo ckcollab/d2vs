@@ -6,6 +6,8 @@ import traceback
 from PIL import Image
 from time import time
 
+from cv2 import cv2
+
 from .constants import ITEM_TYPES
 
 
@@ -41,6 +43,14 @@ class OCR:
         :param width_ths: Maximum horizontal distance to merge boxes; default = 0.6; useful to try a couple values to check for items!
         :return:
         """
+        # Convert input data to something we like (np array w/ BGR data, not RGB)
+        if not isinstance(screen_data, np.ndarray):
+            screen_data = np.asarray(screen_data, dtype='uint8')
+            if screen_data.shape[2] == 4:  # we have an alpha channel
+                screen_data = cv2.cvtColor(screen_data, cv2.COLOR_RGBA2BGR)
+            else:
+                screen_data = cv2.cvtColor(screen_data, cv2.COLOR_RGB2BGR)
+
         height, width, color_channels = screen_data.shape
 
         # defaults should be full width/height if not given
