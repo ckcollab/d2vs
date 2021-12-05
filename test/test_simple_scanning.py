@@ -18,4 +18,7 @@ class SimpleScanningTestcases(OCRTestCases):
     #     # Get a few images of lots of items near each other and confirm grouping is proper
     #     assert False
     def test_scanning_magic_grand_charm_works(self):
-        self._check_scan("test/test_data/magic/grand_charm_gold.PNG", "Grand Charm", "Magic")
+        self._check_scan("test/test_data/magic/grand_charm_only.png", "Grand Charm", "Magic")
+
+    def test_scanning_magic_grand_charm_whole_mouse_over_image_works(self):
+        self._check_scan("test/test_data/magic/grand_charm_gold.png", "Grand Charm", "Magic")
