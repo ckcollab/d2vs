@@ -97,10 +97,3 @@ $ pip install -r requirements.dev.txt
 ```bash
 $ pytest
 ```
-
-## distributing
-
-```bash
-$ python setup.py sdist bdist_wheel
-$ twine upload dist/*
-```
