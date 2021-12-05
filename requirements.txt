@@ -1,2 +1,4 @@
 easyocr==1.4.1
 numpy==1.21.4
+mouse==0.7.1
+keyboard==0.13.5
