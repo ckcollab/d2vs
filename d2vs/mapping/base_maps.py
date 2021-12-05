@@ -132,12 +132,11 @@ class StaticMap(BaseMap):
                     queue.append(new_path)
 
                     for i in conn.get_interactables():
-                        if i == interactable:  # We found it! return path
+                        if i == interactable:  # We found it! return path with this interactable node attached
                             new_path.append(interactable)
                             return new_path
 
                 explored.append(node)
-
 
 
 class StaticMapWithVariations(BaseMap):
