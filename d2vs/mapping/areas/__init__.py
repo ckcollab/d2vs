@@ -1,1 +1,1 @@
-from harrogath import Harrogath
+from .harrogath import Harrogath

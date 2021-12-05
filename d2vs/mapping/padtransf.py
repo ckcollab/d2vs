@@ -192,7 +192,7 @@ def warpAffinePadded(src, dst, M, flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_
     # if np.any(shifted_transf >= 4) or np.any(shifted_transf <= -4):
     #     raise ImageMergeException("We way outta da bounds!")
 
-    if anchor_x >= 100 or anchor_y >= 100:
+    if anchor_x >= 200 or anchor_y >= 200:
         raise ImageMergeException("It seems like we had a bad stitch? try again, maybe someone walked in front of minimap?")
 
     # create padded destination image
@@ -230,6 +230,7 @@ def warpAffinePadded(src, dst, M, flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_
     print("are we doing a huge shift here?")
     print(shifted_transf)
     print("anchors:", anchor_x, anchor_y)
+    print("src_h, src_w:", src_h, src_w)
     print("pad h,w:", dst_pad_h, dst_pad_w)
 
 

@@ -314,8 +314,10 @@ def map_merge_features(diff_1, diff_2):
     # original_with_padding, new_with_padding = warpAffinePadded(diff_2, diff_1, H, flags=cv2.INTER_NEAREST_EXACT)
 
     # Debug showing padding results
-    # cv2.imshow("Result", new_with_padding)
+    # cv2.imshow("new_with_padding", new_with_padding)
+    # cv2.imshow("original_with_padding", original_with_padding)
     # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
     # Let's find red starting point, which may be overwritten by waypoints/other things
     # so we can highlight over it again later
@@ -335,11 +337,10 @@ def map_merge_features(diff_1, diff_2):
     # map = cv2.bitwise_and(new_with_padding, original_with_padding, mask=excluding areas in padding or something?)
 
 
+    # TODO: Merge together AND the overlapping areas, but OR on areas not overlapping ??
 
 
-    # TODO: TESTING
-    # map = cv2.fastNlMeansDenoising(map)
-    # TODO: TESTING
+
 
 
 

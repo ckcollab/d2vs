@@ -10,6 +10,7 @@ from cv2 import cv2
 from d2vs.mapping.capture2 import map_diff, map_capture, map_merge_features, map_get_coordinates
 from d2vs.mapping.padtransf import ImageMergeException
 from d2vs.mapping.pathing import Node
+from d2vs.mapping.pathing.node import Interactable
 from d2vs.utils import NpEncoder, windows_say
 
 
@@ -38,12 +39,12 @@ class AutoRecorder:
         self.nodes = {}
         if load_existing:
             try:
-                node_data = json.loads(open(self._get_area_level_json_path(), "r").read())
+                data = json.loads(open(self._get_area_level_json_path(), "r").read())
             except FileNotFoundError:
-                node_data = {}
+                data = {}
 
             # Loop over data once and make initial set of nodes
-            for n in node_data:
+            for n in data["nodes"]:
                 # pop data not used in class creation
                 n_copy = n.copy()
                 n_copy.pop("connections")
@@ -56,9 +57,13 @@ class AutoRecorder:
                     self.start_node = node
 
             # Loop over data again and make connections
-            for n in node_data:
+            for n in data["nodes"]:
                 for c_x, c_y in n["connections"]:
                     self.nodes[(n["x"], n["y"])].add_connection(self.nodes[(c_x, c_y)])
+
+                for interactable_data in n["interactables"]:
+                    interactable = Interactable(**interactable_data)
+                    self.nodes[(n["x"], n["y"])].add_interactable(interactable)
 
             try:
                 self.map = cv2.imread(self._get_area_level_png_path())
@@ -159,15 +164,22 @@ class AutoRecorder:
 
         self.view_map()
 
+    # TODO: rename to dump since it dumps interactables n such ?
     def dump_nodes(self):
-        node_dict_data = []
+        print("Dumping nodes...")
+        data = {}
+
+        # add nodes
+        data["nodes"] = []
         for node in self.nodes.values():
             node_data = node.to_dict()
             print(f"Adding node_data: {node_data}")
-            node_dict_data.append(node_data)
+            data["nodes"].append(node_data)
 
         with open(self._get_area_level_json_path(), "w") as f:
-            f.write(json.dumps(node_dict_data, cls=NpEncoder, indent=4))
+            f.write(json.dumps(data, cls=NpEncoder, indent=4))
+
+        print("..done!")
 
     def draw_map_with_nodes(self):
         map_copy = self.map.copy()
@@ -183,14 +195,17 @@ class AutoRecorder:
             self.last_base_x, self.last_base_y = map_get_coordinates(map_copy, [0, 0, 255])
             print(self.last_base_x, self.last_base_y)
 
+
+        # keep track of drawn interactables, since nodes may point to the same thing we don't want to draw the txt label twice
+        seen_interactables = {}
+
         for node in self.nodes.values():
             # Go back from 10_000, 10_000 based coordinate system to 0, 0 based for drawing this on our diff
             x = node.x + self.last_base_x - 10_000
             y = node.y + self.last_base_y - 10_000
             print(f"Drawing node from ({node.x}, {node.y}) to ({x}, {y})")
             FONT_HERSHEY_COMPLEX_SMALL = 5
-            cv2.putText(map_copy, f"{node.x}, {node.y}", (x - 20, y - 10), FONT_HERSHEY_COMPLEX_SMALL, .66,
-                        (0x00, 0xff, 0x00), 1)
+            cv2.putText(map_copy, f"{node.x}, {node.y}", (x - 20, y - 10), FONT_HERSHEY_COMPLEX_SMALL, .66, (0x00, 0xff, 0x00), 1)
 
             if node.is_start:
                 color = (0x00, 0x00, 0xff)
@@ -204,7 +219,19 @@ class AutoRecorder:
                 conn_new_x = conn.x + self.last_base_x - 10_000
                 conn_new_y = conn.y + self.last_base_y - 10_000
 
-                cv2.line(map_copy, (x, y), (conn_new_x, conn_new_y), (0x00, 0xff, 0x00))
+                cv2.line(map_copy, (x, y), (conn_new_x, conn_new_y), (0x00, 0xff, 0x00))  # green
+
+            # Add our interactables and draw lines and such to them, only draw the text label one time!
+            for interactable in node.get_interactables():
+                interactable_new_x = interactable.x + self.last_base_x - 10_000
+                interactable_new_y = interactable.y + self.last_base_y - 10_000
+
+                cv2.line(map_copy, (x, y), (interactable_new_x, interactable_new_y), (0, 165, 255))  # orange
+                cv2.circle(map_copy, (interactable_new_x, interactable_new_y), 3, (0, 165, 255), -1)
+
+                if (interactable.x, interactable.y) not in seen_interactables:
+                    cv2.putText(map_copy, f"{interactable.name}", (x - 35, y - 35), FONT_HERSHEY_COMPLEX_SMALL, .66, (0, 165, 255), 1)
+                    seen_interactables[(interactable.x, interactable.y)] = True
 
         cv2.imwrite(self._get_area_level_debug_png_path(), map_copy)
 
@@ -233,11 +260,11 @@ if __name__ == "__main__":
     kwargs = {
         # "load_existing": messagebox.askokcancel("Overwrite", "Load existing area? (if no, you may overwrite something!)"),
         # "area_name": simpledialog.askstring(title="Area name?", prompt="What's the AreaLevel you're working on?", initialvalue="Harrogath")
-        "load_existing": False,
+        # "load_existing": False,
 
-        # "load_existing": True,
-        "area_name": "Catacombs_Level_2",
-        # "prev_node": (10_000, 10_000),
+        "load_existing": True,
+        "area_name": "Harrogath",
+        "prev_node": (10_000, 10_000),
         # "prev_node": (9966, 10034),
     }
 

@@ -1,10 +1,11 @@
-from d2vs.mapping.map import StaticMap
-from d2vs.mapping.pathing import StaticPather, Node
+from d2vs.mapping.base_maps import StaticMap
+# from d2vs.mapping.pathing import StaticPather, Node
 
 
 class Harrogath(StaticMap):
-    pathfinder = StaticPather
-    threshold = .2  # when doing map diffs  TODO: use this!
+    area_name = "Harrogath"
+    # pathfinder = StaticPather
+    # threshold = .2  # when doing map diffs  TODO: use this!
 
     def __init__(self, *args, **kwargs):
         # self.nodes = [
