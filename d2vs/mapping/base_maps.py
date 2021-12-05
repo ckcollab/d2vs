@@ -23,9 +23,12 @@ class BaseMap(ABC):
         # TODO: Load nodes + interactables and all that shit from json
 
 
-    # @abstractmethod
-    # def find_point(self, x, y):
-    #     pass
+    @abstractmethod
+    def find_point(self, x, y):
+        # TODO: Find node closest to x/y, if it's NOT already an existing node, then path to that node and return??
+        #  .
+        #  Like, this would be useful for going to a certain spot close to red portal and using TK on it
+        pass
 
     @abstractmethod
     def find_interactable(self, interactable):
