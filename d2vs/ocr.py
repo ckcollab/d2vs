@@ -6,6 +6,8 @@ import traceback
 from PIL import Image
 from time import time
 
+from cv2 import cv2
+
 from .constants import ITEM_TYPES
 
 
@@ -32,7 +34,7 @@ class OCR:
         """
         Scans an area and returns the bounded text boxes, as well as a guess for the Item Type.
 
-        :param screen_data: np array of pixel data
+        :param screen_data: the data to OCR, which can be: Pillow Image, a filename, np array of pixel data
         :param x1:
         :param y1:
         :param x2:
@@ -41,6 +43,17 @@ class OCR:
         :param width_ths: Maximum horizontal distance to merge boxes; default = 0.6; useful to try a couple values to check for items!
         :return:
         """
+        # Convert input data to something we like (np array w/ BGR data, not RGB)
+        if isinstance(screen_data, str):
+            screen_data = cv2.imread(screen_data)
+
+        if not isinstance(screen_data, np.ndarray):
+            screen_data = np.asarray(screen_data, dtype='uint8')
+            if screen_data.shape[2] == 4:  # we have an alpha channel
+                screen_data = cv2.cvtColor(screen_data, cv2.COLOR_RGBA2BGR)
+            else:
+                screen_data = cv2.cvtColor(screen_data, cv2.COLOR_RGB2BGR)
+
         height, width, color_channels = screen_data.shape
 
         # defaults should be full width/height if not given
@@ -58,7 +71,7 @@ class OCR:
             screen_data[y1:y2, x1:x2],
 
             # Maximum shift in y direction. Boxes with different level should not be merged. default = 0.5
-            ycenter_ths=0.08,
+            ycenter_ths=0.1,
 
             # Maximum horizontal distance to merge boxes. default = 0.5
             width_ths=width_ths,

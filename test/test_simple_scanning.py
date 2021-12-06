@@ -1,5 +1,4 @@
 from .base import OCRTestCases
-from d2vs.ocr import OCR
 
 
 class SimpleScanningTestCases(OCRTestCases):
@@ -14,3 +13,9 @@ class SimpleScanningTestCases(OCRTestCases):
     # def test_segmentation_not_misgrouping_things(self):
     #     # Get a few images of lots of items near each other and confirm grouping is proper
     #     assert False
+    def test_scanning_magic_grand_charm_works(self):
+        self._check_scan("test/test_data/magic/grand_charm_only.png", "Grand Charm", "Magic")
+
+    # TODO: Use paragraph-style-scan assertion stuff for this
+    # def test_scanning_magic_grand_charm_whole_mouse_over_image_works(self):
+    #     self._check_scan("test/test_data/magic/grand_charm_full_item.png", "Grand Charm", "Magic")

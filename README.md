@@ -45,7 +45,7 @@ ocr = OCR()
 img = Image.open("586_gold.png")
 
 # Scan the image
-bounds, text, item_type = ocr.read(np.asarray(img, dtype='uint8'))
+bounds, text, item_type = ocr.read(img)
 
 # Print out the data for demo purposes
 top_left, top_right, bottom_right, bottom_left = bounds
@@ -76,6 +76,11 @@ print(item_type)
 
   _an example map reading from d2vs of black marsh_
   
+![image](https://user-images.githubusercontent.com/2185159/144722467-5fdc4eb4-8a1a-4c96-b280-b818a6c24d27.png)
+
+
+  _nodes for the static map Harrogath_
+  
 </div>
 
 # development
@@ -91,11 +96,4 @@ $ pip install -r requirements.dev.txt
 
 ```bash
 $ pytest
-```
-
-## distributing
-
-```bash
-$ python setup.py sdist bdist_wheel
-$ twine upload dist/*
 ```
