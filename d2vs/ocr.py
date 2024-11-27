@@ -6,7 +6,7 @@ import traceback
 from PIL import Image
 from time import time
 
-from cv2 import cv2
+import cv2
 
 from .constants import ITEM_TYPES
 
