@@ -3,9 +3,9 @@ from setuptools import setup
 
 setup(
     name="d2vs",
-    version="0.0.4",
+    version="0.0.5",
     packages=["d2vs"],
-    description="Save contacts from your terminal",
+    description="diablo 2 vision system is a library to assist with the automation of d2, using only pixels, keyboard and mouse",
     long_description=open("README.md", "r").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/ckcollab/d2vs",
