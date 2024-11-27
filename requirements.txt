@@ -1,6 +1,7 @@
-easyocr==1.4.1
-numpy==1.21.4
+easyocr
+numpy
 mss==6.1.0
 keyboard==0.13.5
-opencv-python==4.5.4.58
+opencv-python
 imutils==0.5.4
+tk

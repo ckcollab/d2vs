@@ -13,8 +13,8 @@ from d2vs.utils import ImageMergeException
 from padtransf import warpAffinePadded
 
 import numpy as np
-from cv2 import cv2
-from matplotlib import pyplot as plt
+import cv2
+#from matplotlib import pyplot as plt
 
 monitor = {"top": 65, "left": 1705, "width": 850, "height": 465}  # this skips over difficulty/area, if game name/pass already hidden
 center_x = int(monitor["width"] / 2)

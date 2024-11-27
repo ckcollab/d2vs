@@ -5,7 +5,7 @@ import keyboard
 from time import sleep
 
 import numpy as np
-from cv2 import cv2
+import cv2
 
 from d2vs.mapping.capture2 import map_diff, map_capture, map_merge_features, map_get_coordinates
 from d2vs.mapping.padtransf import ImageMergeException
@@ -41,7 +41,7 @@ class AutoRecorder:
             try:
                 data = json.loads(open(self._get_area_level_json_path(), "r").read())
             except FileNotFoundError:
-                data = {}
+                print("wtf area missing:", area_name)
 
             # Loop over data once and make initial set of nodes
             for n in data["nodes"]:
@@ -262,10 +262,12 @@ if __name__ == "__main__":
         # "area_name": simpledialog.askstring(title="Area name?", prompt="What's the AreaLevel you're working on?", initialvalue="Harrogath")
         # "load_existing": False,
 
-        "load_existing": True,
-        "area_name": "Harrogath",
-        "prev_node": (10_000, 10_000),
-        # "prev_node": (9966, 10034),
+        # "load_existing": True,
+        # "area_name": "Harrogath",
+        # "prev_node": (10_000, 10_000),
+        # # "prev_node": (9966, 10034),
+
+        "area_name": "Rogue Encampment",
     }
 
     # if kwargs["load_existing"]:
@@ -280,9 +282,9 @@ if __name__ == "__main__":
 
     recorder = AutoRecorder(**kwargs)
 
-    keyboard.add_hotkey("scroll lock", recorder.record_new_node)
-    keyboard.add_hotkey("f11", recorder.view_map)
-    keyboard.add_hotkey("pause break", recorder.finish)
+    keyboard.add_hotkey("f11", recorder.record_new_node)
+    keyboard.add_hotkey("f12", recorder.view_map)
+    keyboard.add_hotkey("f13", recorder.finish)
 
     # TODO: Select some particular node to start connecting from?
 
