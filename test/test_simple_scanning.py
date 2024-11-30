@@ -1,7 +1,7 @@
 from .base import OCRTestCases
 
 
-class SimpleScanningTestcases(OCRTestCases):
+class SimpleScanningTestCases(OCRTestCases):
 
     def test_scanning_simple_works(self):
         self._check_scan("test/test_data/simple/586_gold.png", "586 Gold", "Normal")

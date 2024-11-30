@@ -16,3 +16,12 @@ class OCRTestCases(TestCase):
         assert text == expected_text
         if item_type:
             assert item_type == expected_item_type
+
+    def assert_readings_match_expected(self, readings, expected):
+        lines_read = [line for _, line, _ in readings]
+        lines_expected = expected.split("\n")
+
+        print("\n".join(lines_read))
+
+        for read, expected in zip(lines_read, lines_expected):
+            assert read == expected
